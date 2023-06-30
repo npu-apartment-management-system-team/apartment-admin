@@ -73,14 +73,17 @@ const columns = [
   ];
 
 export default function ApartTable(props) {
+  const {columns,tabledata,tablepage,tabletitle}=props
   function onChange(e){
     console.log(e)
   }
   return (
     <div>
-      <Table columns={columns} dataSource={data} pagination={{position: ['', 'bottomCenter'],}} />
-      <br/>
-      <Pagination showQuickJumper defaultCurrent={1} total={500} onChange={onChange} />
+      <Space direction="vertical" size={16}>
+        <Table columns={columns} dataSource={tabledata} pagination={false} />
+        <br/>
+        <Pagination showQuickJumper defaultCurrent={1} total={tablepage} onChange={onChange} />
+      </Space>
     </div>
   )
 }

@@ -1,4 +1,5 @@
-import React, { useEffect, useNavigate } from 'react'
+import React, { useEffect } from 'react'
+import { Route, Routes, Navigate, useNavigate } from 'react-router-dom'
 import { Menu } from 'antd';
 
 // const items = [内部渲染items似乎不可行，直接传入完整items来使用
@@ -19,9 +20,12 @@ import { Menu } from 'antd';
 // ];
 
 export default function LeftMenu(props) {
+  const {routers}=props
   const navigate = useNavigate()
   function changeNav(e){
-    console.log(e)
+    // console.log(e.key)
+    // console.log(routers[parseInt(e.key,10)-1])
+    navigate('/home'+routers[parseInt(e.key,10)-1].route,{replace: true});
   }
   return (
     <div>

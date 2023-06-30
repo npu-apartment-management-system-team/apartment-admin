@@ -12,6 +12,7 @@ import _axios from './api';
 import Home from './Pages/Home';
 import storageUtils from './utils/storageUtils'
 import memoryUtils from './utils/memoryUtils'
+import { Button, Space } from 'antd';
 
 function getItem(label, key, icon, children, type) {
   return {
@@ -57,19 +58,54 @@ const textitem=[
     ]
   },
 ]
+const apartcons=[
+  {
+    title: 'Name',
+    dataIndex: 'name',
+    key: 'name',
+  },
+  {
+    title: 'Position',
+    dataIndex: 'position',
+    key: 'position',
+  },
+  {
+    title: 'Location',
+    dataIndex: 'location',
+    key: 'location',
+  },
+  {
+    title: 'Action',
+    key: 'action',
+    render: (_,record) => (
+      <Space size="middle">
+        <Button>修改</Button>
+        <Button>删除{record.name}</Button>
+      </Space>
+    ),
+  },
+]
+function apartDelete(){
+  _axios({
+    method:'DELETE',
+    url:'/api/management/apartment/{id}'
+  })
+}
 
 function App() {
   const [loged,changeLoged]=useState(false);
   const [lognum,changeLognum]=useState(0);
   const [usermsg,setUserMsg]=useState(null);
-  const [colums,setColums]=useState([])
+  const [columns,setColums]=useState([])
+  const [tabledata,setTableData]=useState([])
+  const [tablepage,setTablePage]=useState(0)
+  const [tabletitle,setTableTitle]=useState("")
   const navigate = useNavigate()
   useEffect(()=>{//建立长连结
     if(window.localStorage.getItem('token') !== undefined) {
       let result=window.localStorage.getItem('user_key')
       let num=window.localStorage.getItem('role')
       login(num,result)
-      // changeLoged(true)
     }
     axios.defaults.baseURL="https://apartment-server.wangminan.me"
     axios.get('/api/auth/hello')
@@ -89,8 +125,21 @@ function App() {
       const {code,msg}=response.data
       const {list,total}=response.data.result
       if(code===2000){
-        console.log(total)
+        // console.log(total)
         console.log(list)
+        setTableTitle("公寓列表")
+        setTablePage(total/pagesize+1);
+        setColums(apartcons)
+        let data=[]
+        for(let i=0;i<list.length;i++){
+          let tmp={};
+          tmp.key=i+1;
+          tmp.name=list[i].name;
+          tmp.position=list[i].position;
+          tmp.location=list[i].location;
+          data.push(tmp)
+        }
+        setTableData(data)
       }else{
         alert(msg)
       }
@@ -109,7 +158,8 @@ function App() {
   if(loged){
     return (
       <div>
-        <Home lognum={lognum} usermsg={usermsg} textitem={textitem} colums={colums}/>
+        <Home lognum={lognum} usermsg={usermsg} textitem={textitem} 
+        columns={columns} tabledata={tabledata} tablepage={tablepage} tabletitle={tabletitle} />
       </div>
     )
   }

@@ -21,8 +21,8 @@ const contentStyle = {
     textAlign: 'center',
     minHeight: 120,
     lineHeight: '120px',
-    color: '#fff',
-    backgroundColor: '#108ee9',
+    color: '#000',
+    backgroundColor: '#fff',
   };
   const siderStyle = {
     textAlign: 'center',
@@ -32,19 +32,20 @@ const contentStyle = {
   };
 
 export default function Home(props) {
-  const{lognum,textitem,usermsg}=props
+  const{lognum,textitem,usermsg,columns,tabledata,tablepage,tabletitle}=props
+  const routers=textitem[lognum].routers
   const [collapsed, setCollapsed] = useState(false);
   return (
     <Space direction="vertical" style={{ width: '100%' }} size={[0, 48]}>
         <Layout style={{ minHeight: '100vh' }}>
             <Sider style={siderStyle} collapsible collapsed={collapsed} onCollapse={(value) => setCollapsed(value)}>
-            <LeftMenu mode="inline" theme="dark" textitem={textitem[lognum].item} />
+            <LeftMenu mode="inline" theme="dark" textitem={textitem[lognum].item} routers={routers} />
             </Sider>
             <Layout>
             <Content style={contentStyle}>
                 <Routes>
                     <Route path="/home/welcome" element={<Welcome job={textitem[lognum].name} usermsg={usermsg} />} />
-                    <Route path='/home/apart' element={<ApartTable/>} />
+                    <Route path='/home/apart' element={<ApartTable columns={columns} tabledata={tabledata} tablepage={tablepage} tabletitle={tabletitle} />} />
                     
                     <Route path="*" element={<Navigate to="/home/welcome" />} />
                 </Routes>
