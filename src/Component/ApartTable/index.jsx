@@ -1,5 +1,5 @@
 import React from 'react'
-import { Space, Table, Tag } from 'antd';
+import { Pagination, Space, Table, Tag } from 'antd';
 const columns = [
     {
       title: 'Name',

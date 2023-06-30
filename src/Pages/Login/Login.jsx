@@ -1,9 +1,10 @@
 import React from 'react';
 import { EyeInvisibleOutlined, EyeTwoTone, InfoCircleOutlined, UserOutlined } from '@ant-design/icons';
 import { Button, Input, Tooltip } from 'antd';
-import {useState} from 'react';
+import { useState } from 'react';
 import _axios from '../../api';
 import { encrypt } from '../../utils/jsencrypt';
+import storageUtils from '../../utils/storageUtils'
 
 export default function Login(props) {
     // const initusername="",initpassword=""
@@ -36,8 +37,7 @@ export default function Login(props) {
           // console.log('code is'+code)
           if(code===2000){
             window.localStorage.setItem('token', result.token)
-            // const user = storageUtils.getUser();
-            // memoryUtils.user = user;
+            window.localStorage.setItem('role', result.role)
             
             if(result.user){
               const user = result.user;

@@ -10,16 +10,8 @@ import axios from 'axios';
 import imgUrl from './assets/images/apartment.svg'
 import _axios from './api';
 import Home from './Pages/Home';
+import storageUtils from './utils/storageUtils'
 import memoryUtils from './utils/memoryUtils'
-
-const headerStyle = {
-  textAlign: 'center',
-  color: '#fff',
-  height: 64,
-  paddingInline: 50,
-  lineHeight: '64px',
-  backgroundColor: '#7dbcea',
-};
 
 function getItem(label, key, icon, children, type) {
   return {
@@ -57,6 +49,12 @@ const textitem=[
       getItem('房间管理', '3', <PieChartOutlined />),
       getItem('床位管理', '4', <PieChartOutlined />),
     ],
+    routers:[
+      {route:'/promise'},
+      {route:'/apart'},
+      {route:'/room'},
+      {route:'/bed'},
+    ]
   },
 ]
 
@@ -67,6 +65,12 @@ function App() {
   const [colums,setColums]=useState([])
   const navigate = useNavigate()
   useEffect(()=>{//建立长连结
+    if(window.localStorage.getItem('token') !== undefined) {
+      let result=window.localStorage.getItem('user_key')
+      let num=window.localStorage.getItem('role')
+      login(num,result)
+      // changeLoged(true)
+    }
     axios.defaults.baseURL="https://apartment-server.wangminan.me"
     axios.get('/api/auth/hello')
   },[])
@@ -101,16 +105,11 @@ function App() {
     changeLognum(3);
     getApart(1,10)
   }
-  const user = memoryUtils.user;
-  if(user._id){changeLoged(true)}
+  // const user = memoryUtils.user;
   if(loged){
     return (
       <div>
-        <Routes>
-          <Route path="/home" element={<Home textitem={textitem} colums={colums}/>} />
-
-          <Route path="*" element={<Navigate to="/home" />} />
-        </Routes>
+        <Home lognum={lognum} usermsg={usermsg} textitem={textitem} colums={colums}/>
       </div>
     )
   }
