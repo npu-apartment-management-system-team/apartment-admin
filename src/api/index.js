@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 const _axios = axios.create({
-	baseURL: 'https://apartment-server.wangminan.me'
+	baseURL: import.meta.env.VITE_BASE_URL
 })
 
 _axios.interceptors.request.use(
@@ -23,7 +23,7 @@ _axios.interceptors.response.use(
 		if (res !== null && res.data !== null && res.data.code !== null){
 			if (res.data.code === 4012 || res.data.code === 4010 || res.data.code === 4030) {//权限不足
 				window.localStorage.removeItem('token')
-				
+
 				// 倒计时
 				setTimeout(() => {
 					window.location.href = '/login'

@@ -107,7 +107,7 @@ function App() {
       let num=window.localStorage.getItem('role')
       login(num,result)
     }
-    axios.defaults.baseURL="https://apartment-server.wangminan.me"
+    axios.defaults.baseURL=import.meta.env.VITE_BASE_URL
     axios.get('/api/auth/hello')
   },[])
   // function changeNav(keyword){
@@ -158,7 +158,7 @@ function App() {
   if(loged){
     return (
       <div>
-        <Home lognum={lognum} usermsg={usermsg} textitem={textitem} 
+        <Home lognum={lognum} usermsg={usermsg} textitem={textitem}
         columns={columns} tabledata={tabledata} tablepage={tablepage} tabletitle={tabletitle} />
       </div>
     )
