@@ -1,0 +1,62 @@
+name: Publish exe release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  cache-and-build-and-publish:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: 'npm'
+
+      - name: Switch to powershell
+        run: powershell
+
+      - name: Install dependencies for apartment admin
+        run: npm install
+
+      - name: build dist
+        run: npm run build
+
+      - name: switch to upper dic
+        run: cd ..
+
+      - name: clone the quick start repo
+        run: git clone https://github.com/electron/electron-quick-start.git
+
+      - name: get in the new dic
+        run: cd electron-quick-start
+
+      - name: copy dist to current dic
+        run: cp -r ../apartment-admin/dist .
+
+      - name: replace main.js
+        run: cp ../apartment-admin/electron-build/* .
+
+      - name: Install dependencies for electron-quick-start
+        run: npm install
+
+      - name: Package with electron packager
+        run: npm run package
+
+      - name: Zip the Build
+        run: Compress-Archive -Path .\apartment-admin-win32-x64\* -DestinationPath .\apartment-admin-win32-x64.zip
+
+      - name: Create Release and Upload Release Asset
+        uses: softprops/action-gh-release@v1
+        with:
+          body: 使用electron打包后发布
+          prerelease: false
+          files: |
+            apartment-admin-win32-x64.zip
+            LICENSE.md
