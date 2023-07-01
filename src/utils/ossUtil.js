@@ -57,22 +57,22 @@ const client = new OSS({
     }
 })
 
-export const putFile = async (name, foldername, file) => {
+export const putFile = async (name, folderName, file) => {
     // 填写OSS文件完整路径和本地文件的完整路径。OSS文件完整路径中不能包含Bucket名称。
     // 如果本地文件的完整路径中未指定本地路径，则默认从示例程序所属项目对应本地路径中上传文件。
     return await client.put(
-        foldername + name + '_' + createFileNameUUID() + '.' + file.name.split('.')[1],
+        folderName + name + '_' + createFileNameUUID() + '.' + file.name.split('.')[1],
         file,
         {headers}
     )
 }
 
 // 删除原有文件
-export const deleteFile = async (foldername, name) => {
+export const deleteFile = async (folderName, name) => {
     // 填写OSS文件完整路径和本地文件的完整路径。OSS文件完整路径中不能包含Bucket名称。
     // 如果本地文件的完整路径中未指定本地路径，则默认从示例程序所属项目对应本地路径中上传文件。
     return await client.delete(
         // 注意UTF-8转码 否则delete的请求路径中将出现中文问题
-        revertFromUTF8(foldername+ name)
+        revertFromUTF8(folderName + name)
     )
 }
