@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { Pagination, Space, Table, Tag } from 'antd';
 const columns = [
     {
@@ -73,13 +73,25 @@ const columns = [
   ];
 
 export default function ApartTable(props) {
-  const {columns,tabledata,tablepage,tabletitle}=props
+  const {getApart,getRoom}=props
+  let { tabletype, columns,tabledata,tablepage,tabletitle}=props
+  useEffect(()=>{
+    console.log(tablepage)
+    if(tabletype==='apart'){
+      // tabledata=[]
+      getApart(1,10)
+    }else if(tabletype==='room'){
+      // tabledata=[]
+      getRoom(1,5)
+    }
+  },[tabletype])
   function onChange(e){
     console.log(e)
   }
   return (
     <div>
       <Space direction="vertical" size={16}>
+        <h2>{tabletitle}</h2>
         <Table columns={columns} dataSource={tabledata} pagination={false} />
         <Pagination showQuickJumper defaultCurrent={1} total={tablepage} onChange={onChange} />
       </Space>

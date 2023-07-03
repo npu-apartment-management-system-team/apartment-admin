@@ -33,6 +33,7 @@ const contentStyle = {
 
 export default function Home(props) {
   const {logOut}=props
+  const {getApart,getRoom}=props
   const{lognum,textitem,usermsg,columns,tabledata,tablepage,tabletitle}=props
   const routers=textitem[lognum].routers
   const [collapsed, setCollapsed] = useState(false);
@@ -54,8 +55,8 @@ export default function Home(props) {
             <Content style={contentStyle}>
                 <Routes>
                     <Route path="/home/welcome" element={<Welcome job={textitem[lognum].name} usermsg={usermsg} />} />
-                    <Route path='/home/apart' element={<ApartTable columns={columns} tabledata={tabledata} tablepage={tablepage} tabletitle={tabletitle} />} />
-                    <Route path='/home/room' element={<ApartTable columns={columns} tabledata={tabledata} tablepage={tablepage} tabletitle={tabletitle} />} />
+                    <Route path='/home/apart' element={<ApartTable getApart={getApart} tabletype={'apart'} columns={columns} tabledata={tabledata} tablepage={tablepage} tabletitle={tabletitle} />} />
+                    <Route path='/home/room' element={<ApartTable getRoom={getRoom} tabletype={'room'} columns={columns} tabledata={tabledata} tablepage={tablepage} tabletitle={tabletitle} />} />
                     
                     <Route path="*" element={<Navigate to="/home/welcome" />} />
                 </Routes>
