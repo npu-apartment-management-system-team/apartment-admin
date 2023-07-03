@@ -4,7 +4,6 @@ import { Button, Input, Tooltip } from 'antd';
 import { useState } from 'react';
 import _axios from '../../api';
 import { encrypt } from '../../utils/jsencrypt';
-import storageUtils from '../../utils/storageUtils'
 
 export default function Login(props) {
     // const initusername="",initpassword=""
@@ -41,11 +40,13 @@ export default function Login(props) {
             
             if(result.user){
               const user = result.user;
-              storageUtils.saveUser(user);
               props.login(result.role,result.user);
             }else{
               const user = result.admin;
-              storageUtils.saveUser(user);
+              window.localStorage.setItem('user.id', user.id)
+              window.localStorage.setItem('user.name', user.name)
+              window.localStorage.setItem('user.loginAccountId', user.loginAccountId)
+              window.localStorage.setItem('user.email', user.email)
               props.login(result.role,result.admin);
             }
           }

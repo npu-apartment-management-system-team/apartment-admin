@@ -81,7 +81,6 @@ export default function ApartTable(props) {
     <div>
       <Space direction="vertical" size={16}>
         <Table columns={columns} dataSource={tabledata} pagination={false} />
-        <br/>
         <Pagination showQuickJumper defaultCurrent={1} total={tablepage} onChange={onChange} />
       </Space>
     </div>
