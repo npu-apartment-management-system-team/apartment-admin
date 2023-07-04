@@ -34,14 +34,20 @@ jobs:
       - name: clone the quick start repo
         run: git clone https://github.com/electron/electron-quick-start.git
 
+      - name: show relate dirs
+        run: ls
+
       - name: get in the new dic
-        run: cd electron-quick-start
+        run: cd .\electron-quick-start\
 
       - name: copy dist to current dic
-        run: cp -r ../apartment-admin/dist .
+        run: Copy-Item ..\apartment-admin\dist . -Recurse -Force
 
       - name: replace main.js
-        run: cp ../apartment-admin/electron-build/* .
+        run: Copy-Item ..\apartment-admin\electron-build\* . -Force
+
+      - name: show dir
+        run: ls
 
       - name: Install dependencies for electron-quick-start
         run: npm install
