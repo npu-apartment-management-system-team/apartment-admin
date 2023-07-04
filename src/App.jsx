@@ -13,7 +13,7 @@ import Home from './Pages/Home';
 import DownDrawer from './Component/DownDrawer';
 import { Button, Drawer, Input, Space } from 'antd';
 import { v4 as uuidv4 } from 'uuid';
-import { func } from 'prop-types';
+import PubSub from 'pubsub-js';
 
 function getItem(label, key, icon, children, type) {
   return {
@@ -88,6 +88,8 @@ function App() {
   const [apartupdateclass,setApartUpdateClass]=useState({})
   const [apartidlist,setApartIdList]=useState([])
 
+  const [tablereturned,setTableReturned]=useState(false)
+
   //roomtable needs
   // const [rcolumns,setRColums]=useState([])
 
@@ -132,7 +134,7 @@ function App() {
     {
       title: 'Action',
       key: 'action',
-      render: (_,record,index) => (
+      render: (_,record,index) => (//record 本条目下的所有数据 index 当前条目编号
         <Space size="middle">
           <Button type="primary" onClick={()=>openUpdateDrawer(index,record)}>修改此条目</Button>
           <Button type="primary" onClick={()=>apartDelete(index)}>删除{record.name}</Button>
@@ -212,7 +214,7 @@ function App() {
     }).then(response=>{
       const {code}=response.data
       if(code===2000){
-        getApart(1,10)
+        getApart(1,100)
         alert("修改已完成")
       }else{
         const {msg}=response.data
@@ -227,7 +229,7 @@ function App() {
     }).then(response=>{
       const {code}=response.data
       if(code===2000){
-        getApart(1,10)
+        getApart(1,100)
       }else{
         const {msg}=response.data
         alert(msg)
@@ -243,7 +245,7 @@ function App() {
       const {list,total}=response.data.result
       if(code===2000){
         setTableTitle("公寓列表")
-        setTablePage(total/pagesize+1);
+        setTablePage(Math.ceil(total/pagesize));
         setColums(apartcons)
         inittablekeys(apartcons)
         setApartIdList((apartidlist)=>{
@@ -264,6 +266,10 @@ function App() {
           data.push(tmp)
         }
         setTableData(data)
+        setTableReturned(()=>{//通知子组件数据已经更新完成
+          PubSub.publish('tablereturned',true)
+          return true
+        })
       }else{
         alert(msg)
       }
@@ -272,12 +278,12 @@ function App() {
 
   const roomcons=[
     {
-      title: 'Name',
+      title: '宿舍号',
       dataIndex: 'name',
       key: 'name',
     },
     {
-      title: 'Sex',//0男 1女
+      title: '性别',//0男 1女
       dataIndex: 'sex',
       key: 'sex',
     },
@@ -301,9 +307,40 @@ function App() {
       dataIndex: 'isReserved',
       key: 'isReserved',
     },
+    {
+      title: 'Action',
+      key: 'action',
+      render: (_,record,index) => (//record 本条目下的所有数据  index 当前条目编号，从0开始
+        <Space size="middle">
+          <Button type="primary" onClick={()=>openUpdateDrawer(index,record)}>修改此条目</Button>
+          <Button type="primary" onClick={()=>roomDelete(index)}>删除{record.name}</Button>
+        </Space>
+      ),
+    }
   ]
 
+  function roomUpdate(){}
+
+  function roomDelete(id){
+    _axios({
+      method:'DELETE',
+      url:`/api/management/room/${apartidlist[id]}`,
+    }).then(response=>{
+      const {code}=response.data
+      if(code===2000){
+        getRoom(1,100)
+      }else{
+        const {msg}=response.data
+        alert(msg)
+      }
+    })
+  }
+
   function getRoom(page,pagesize){
+    // setTableReturned(()=>{
+    //   PubSub.publish('tablereturned',false)
+    //   return false
+    // })
     _axios.get('/api/management/room',{
       params:{
         pageNum:page,
@@ -316,10 +353,14 @@ function App() {
     }).then(response=>{
       const {code,msg}=response.data
       const {list,total}=response.data.result
-      console.log(total)
       if(code===2000){
         setTableTitle("房间列表")
-        setTablePage(total/pagesize+1);
+        setTablePage(Math.ceil(total/pagesize));//页码求值向上取整
+        setTablePage((tablepage)=>{
+          PubSub.publish('tablepage',tablepage)
+          return tablepage
+        })
+        // console.log('outer'+tablepage)
         // console.log(list)
         setColums(roomcons)
         inittablekeys(apartcons)
@@ -350,11 +391,25 @@ function App() {
             tmp.type=list[i].type+'人间';
           }
           
-          tmp.isForCadre=Boolean(list[i].isForCadre).toString();
-          tmp.isReserved=Boolean(list[i].isReserved).toString();
+          if(list[i].isForCadre){
+            tmp.isForCadre='是'
+          }else{
+            tmp.isForCadre='否'
+          }
+
+          if(list[i].isReserved){
+            tmp.isReserved='是'
+          }else{
+            tmp.isReserved='否'
+          }
+
           data.push(tmp)
         }
         setTableData(data)
+        setTableReturned(()=>{//通知子组件数据已经更新完成
+          PubSub.publish('tablereturned',true)
+          return true
+        })
       }else{
         alert(msg)
       }

@@ -1,5 +1,7 @@
-import React, { useEffect } from 'react'
-import { Pagination, Space, Table, Tag } from 'antd';
+import React, { useEffect, useState } from 'react'
+import { Button, Pagination, Space, Spin, Table, Tag } from 'antd';
+import PubSub from 'pubsub-js';
+
 const columns = [
     {
       title: 'Name',
@@ -75,26 +77,55 @@ const columns = [
 export default function ApartTable(props) {
   const {getApart,getRoom}=props
   let { tabletype, columns,tabledata,tablepage,tabletitle}=props
+  const [returned,changeReturned]=useState(false)
+  PubSub.subscribe('tablereturned',(msgname,data)=>{
+    changeReturned(()=>{
+      return data
+    })
+    console.log(returned)
+  })
+
+  //通过修改空对象实现组件强制刷新
+  const [, updateState] = React.useState();
+  const forceUpdate = React.useCallback(() => updateState({}), []);
+
   useEffect(()=>{
-    console.log(tablepage)
     if(tabletype==='apart'){
-      // tabledata=[]
-      getApart(1,10)
+      changeReturned(false)
+      getApart(1,100)
+      forceUpdate()
     }else if(tabletype==='room'){
-      // tabledata=[]
-      getRoom(1,5)
+      changeReturned(false)
+      getRoom(1,100)
+      // console.log(tablepage)
+      forceUpdate()
     }
   },[tabletype])
   function onChange(e){
     console.log(e)
   }
-  return (
-    <div>
-      <Space direction="vertical" size={16}>
-        <h2>{tabletitle}</h2>
-        <Table columns={columns} dataSource={tabledata} pagination={false} />
-        <Pagination showQuickJumper defaultCurrent={1} total={tablepage} onChange={onChange} />
-      </Space>
-    </div>
-  )
+  if(!returned){
+    return (
+      <div>
+        <Spin/>
+      </div>
+    )
+  }
+  else{
+    PubSub.subscribe('tablepage',(msgname,data)=>{
+      tablepage=data
+      console.log(tablepage)
+    })
+    return (
+      <div>
+        <Space direction="vertical" size={16}>
+          <h2>{tabletitle}</h2>
+          <Button>增加</Button>
+          <Table columns={columns} dataSource={tabledata} pagination={false} />
+          {/* <Pagination showQuickJumper defaultCurrent={1} total={tablepage} onChange={onChange} /> */}
+        </Space>
+      </div>
+    )
+  }
+  
 }
