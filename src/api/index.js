@@ -1,7 +1,9 @@
 import axios from 'axios'
+import qs from 'qs'
 
 const _axios = axios.create({
-	baseURL: import.meta.env.VITE_BASE_URL
+	baseURL: import.meta.env.VITE_BASE_URL,
+	paramsSerializer: params => qs.stringify(params, { arrayFormat: 'brackets' })
 })
 
 _axios.interceptors.request.use(
