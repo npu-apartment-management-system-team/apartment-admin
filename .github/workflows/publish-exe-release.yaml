@@ -28,8 +28,11 @@ jobs:
       - name: build dist
         run: npm run build
 
+      - name: show relate dirs
+        run: ls
+
       - name: switch to upper dic
-        run: cd ..
+        run: cd ../../
 
       - name: clone the quick start repo
         run: git clone https://github.com/electron/electron-quick-start.git
