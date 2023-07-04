@@ -2,14 +2,14 @@ import React, { useEffect, useState } from 'react'
 import { Button, Drawer, Input, Radio, Spin } from 'antd';
 
 export default function DownDrawer(props) {
-  const {title,placement,onClose,open,tableitems,records,apartUpdate}=props
+  const {type,title,placement,onClose,open,tableitems,records,apartUpdate,roomUpdate}=props
   const [loadings, setLoadings] = useState(false);
   const [value,setValue]=useState(0)
   const [updateClass,setUpdateClass]=useState({status:0})
   // console.log(tableitems)
-  function updateClick(){
+  function apartupdateClick(){
     setLoadings(true)
-    apartUpdate(records.key-1,updateClass)
+    apartUpdate(records.index,updateClass)
     setLoadings(false)
   }
   function onapartChange(e){
@@ -19,13 +19,27 @@ export default function DownDrawer(props) {
     })
     setValue(e.target.value)
   }
+
+  function roomupdateClick(){
+    setLoadings(true)
+    console.log(records)
+    roomUpdate(records.index,updateClass)
+    setLoadings(false)
+  }
+
+  function bedupdateClick(){
+    setLoadings(true)
+    console.log(records)
+    roomUpdate(records.index,updateClass)
+    setLoadings(false)
+  }
   if(tableitems.length===0){
     return (
       <Drawer title={title} placement={placement} onClose={onClose} open={open} >
           <Spin/>
       </Drawer>
     )
-  }else{
+  }else if(type==='apart'){
     return (
       <Drawer title={title} placement={placement} onClose={onClose} open={open} >
           {/* 复数input分别绑定当前表中内容 */}
@@ -38,7 +52,27 @@ export default function DownDrawer(props) {
           </Radio.Group>
           <br/>
           <div style={{ textAlign: 'center' }}>
-            <Button type="primary" loading={loadings} onClick={updateClick} >修改</Button>
+            <Button type="primary" loading={loadings} onClick={apartupdateClick} >修改</Button>
+          </div>
+      </Drawer>
+    )
+  }else if(type==='room'){
+    return (
+      <Drawer title={title} placement={placement} onClose={onClose} open={open} >
+          {tableitems}
+          <br/>
+          <div style={{ textAlign: 'center' }}>
+            <Button type="primary" loading={loadings} onClick={roomupdateClick} >修改</Button>
+          </div>
+      </Drawer>
+    )
+  }else if(type==='bed'){
+    return (
+      <Drawer title={title} placement={placement} onClose={onClose} open={open} >
+          {tableitems}
+          <br/>
+          <div style={{ textAlign: 'center' }}>
+            <Button type="primary" loading={loadings} onClick={bedupdateClick} >修改</Button>
           </div>
       </Drawer>
     )

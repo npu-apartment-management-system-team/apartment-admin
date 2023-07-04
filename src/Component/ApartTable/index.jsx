@@ -75,7 +75,7 @@ const columns = [
   ];
 
 export default function ApartTable(props) {
-  const {getApart,getRoom}=props
+  const {getApart,getRoom,getBed}=props
   let { tabletype, columns,tabledata,tablepage,tabletitle}=props
   const [returned,changeReturned]=useState(false)
   PubSub.subscribe('tablereturned',(msgname,data)=>{
@@ -99,6 +99,9 @@ export default function ApartTable(props) {
       getRoom(1,100)
       // console.log(tablepage)
       forceUpdate()
+    }else if(tabletype==='bed'){
+      changeReturned(false)
+      getBed(1,100)
     }
   },[tabletype])
   function onChange(e){
@@ -120,7 +123,7 @@ export default function ApartTable(props) {
       <div>
         <Space direction="vertical" size={16}>
           <h2>{tabletitle}</h2>
-          <Button>增加</Button>
+          <Button tabletype={tabletype} >增加</Button>
           <Table columns={columns} dataSource={tabledata} pagination={false} />
           {/* <Pagination showQuickJumper defaultCurrent={1} total={tablepage} onChange={onChange} /> */}
         </Space>

@@ -13,7 +13,7 @@ import Home from './Pages/Home';
 import DownDrawer from './Component/DownDrawer';
 import { Button, Drawer, Input, Space } from 'antd';
 import { v4 as uuidv4 } from 'uuid';
-import PubSub from 'pubsub-js';
+import PubSub, { countSubscriptions } from 'pubsub-js';
 
 function getItem(label, key, icon, children, type) {
   return {
@@ -80,6 +80,7 @@ function App() {
   const [tablepage,setTablePage]=useState(0)
   const [tabletitle,setTableTitle]=useState("")
 
+  //update downdrawer needs
   const [openupdate, setOpenUpdate] = useState(false);
   const [drawertitle,setDrawerTitle]=useState("")
   const [records,setRecords]=useState({})
@@ -87,11 +88,9 @@ function App() {
   const [tableitems,setTableItems]=useState([])
   const [apartupdateclass,setApartUpdateClass]=useState({})
   const [apartidlist,setApartIdList]=useState([])
+  const [updatedrawertype,setType]=useState('')
 
   const [tablereturned,setTableReturned]=useState(false)
-
-  //roomtable needs
-  // const [rcolumns,setRColums]=useState([])
 
   const navigate = useNavigate()
   useEffect(()=>{//建立长连结
@@ -136,7 +135,7 @@ function App() {
       key: 'action',
       render: (_,record,index) => (//record 本条目下的所有数据 index 当前条目编号
         <Space size="middle">
-          <Button type="primary" onClick={()=>openUpdateDrawer(index,record)}>修改此条目</Button>
+          <Button type="primary" onClick={()=>openUpdateDrawer(index,record,'apart')}>修改此条目</Button>
           <Button type="primary" onClick={()=>apartDelete(index)}>删除{record.name}</Button>
         </Space>
       ),
@@ -148,6 +147,7 @@ function App() {
       for(let i=0;i<colus.length-1;i++){
         keys.push(colus[i].dataIndex)
       }
+      console.log(keys)
       return keys
     })
     setTableKeys((tablekeys)=>{//防止setState的异步更新取到旧值 set函数中收到的参数保证是最新值
@@ -160,7 +160,10 @@ function App() {
       return apartupdateclass
     })
   }
-  function openUpdateDrawer(index,record){
+  function openUpdateDrawer(index,record,type){
+    setType(()=>{
+      return type;//下方更新框的类型
+    })
     setRecords(record)
     setOpenUpdate(true)
     setDrawerTitle(()=>{
@@ -200,26 +203,31 @@ function App() {
       alert('Location格式不正确！')
       return
     }
-    _axios({
-      method:'PUT',
-      url:`/api/management/apartment/${apartidlist[index]}`,
-      data:{
-        foremanAdminId:lognum,
-        name:apartupdateclass.name,
-        position:apartupdateclass.position,
-        positionLongitude:lon[1],
-        positionLatitude:lon[0],
-        status:datas.status,//宿舍状态，0正常 1启用程序中 2弃用程序中 3已弃用
-      }
-    }).then(response=>{
-      const {code}=response.data
-      if(code===2000){
-        getApart(1,100)
-        alert("修改已完成")
-      }else{
-        const {msg}=response.data
-        alert(msg)
-      }
+    setApartIdList((apartidlist)=>{//防止异步，保证访问到最新的apartidlist
+      _axios({
+        method:'PUT',
+        url:`/api/management/apartment/${apartidlist[index]}`,
+        data:{
+          foremanAdminId:lognum,
+          name:apartupdateclass.name,
+          position:apartupdateclass.position,
+          positionLongitude:lon[1],
+          positionLatitude:lon[0],
+          status:datas.status,//宿舍状态，0正常 1启用程序中 2弃用程序中 3已弃用
+        }
+      }).then(response=>{
+        const {code}=response.data
+        if(code===2000){
+          getApart(1,100)
+          alert("修改已完成，请刷新以查看修改结果")
+          setOpenUpdate(false)//关闭下方弹出菜单
+        }else{
+          const {msg}=response.data
+          alert(msg)
+          setOpenUpdate(false)//关闭下方弹出菜单
+        }
+      })
+      return apartidlist
     })
   }
   function apartDelete(index){
@@ -260,6 +268,7 @@ function App() {
           })
           let tmp={};
           tmp.key=uuidv4();
+          tmp.index=i;
           tmp.name=list[i].name;
           tmp.position=list[i].position;
           tmp.location=list[i].location;
@@ -308,18 +317,109 @@ function App() {
       key: 'isReserved',
     },
     {
+      title:'房间总价',
+      dataIndex:'totalFee',
+      key: 'totalFee',
+    },
+    {
+      title:'自理部分',
+      dataIndex:'selfPayFee',
+      key: 'selfPayFee',
+    },
+    {
+      title:'单位报销',
+      dataIndex:'refundFee',
+      key: 'refundFee',
+    },
+    {
       title: 'Action',
       key: 'action',
       render: (_,record,index) => (//record 本条目下的所有数据  index 当前条目编号，从0开始
         <Space size="middle">
-          <Button type="primary" onClick={()=>openUpdateDrawer(index,record)}>修改此条目</Button>
+          <Button type="primary" onClick={()=>openUpdateDrawer(index,record,'room')}>修改此条目</Button>
           <Button type="primary" onClick={()=>roomDelete(index)}>删除{record.name}</Button>
         </Space>
       ),
     }
   ]
 
-  function roomUpdate(){}
+  function roomUpdate(index,datas){
+    let flag=true;
+    setApartUpdateClass((updateclass)=>{
+      if(updateclass.sex==='man'||updateclass.sex==='男'){
+        updateclass.sex=0
+      }else if(updateclass.sex==='woman'||updateclass.sex==='女'){
+        updateclass.sex=1
+      }else{
+        alert('性别格式非法')
+        flag=false
+      }
+
+      if(updateclass.isForCadre==='是'){
+        updateclass.isForCadre=1
+      }else if(updateclass.isForCadre==='否'){
+        updateclass.isForCadre=0
+      }else{
+        alert('干部房状态格式非法')
+        flag=false
+      }
+
+      if(updateclass.isReserved==='是'){
+        updateclass.isReserved=1
+      }else if(updateclass.isReserved==='否'){
+        updateclass.isReserved=0
+      }else{
+        alert('保留间状态格式非法')
+        flag=false
+      }
+
+      if(updateclass.type==='单人间'){
+        updateclass.type=1
+      }else if(updateclass.type==='双人间'){
+        updateclass.type=2
+      }else{
+        updateclass.type=parseInt(updateclass.type.substring(0,updateclass.type.indexOf('人')))
+      }
+
+      if(updateclass.totalFee!==updateclass.selfPayFee+updateclass.refundFee){
+        alert('总价不等于单位报销部分和个人自理部分之和')
+        flag=false
+      }
+
+      return updateclass
+    })
+    if(!flag){return}//存在非法数据，不予发送请求
+    setApartIdList((apartidlist)=>{//防止异步，保证访问到最新的apartidlist
+      _axios({
+        method:'PUT',
+        url:`/api/management/room/${apartidlist[index]}`,
+        data:{
+          apartmentId:1,
+          name:apartupdateclass.name,
+          sex:apartupdateclass.sex,
+          usage:apartupdateclass.usage,
+          isForCadre:apartupdateclass.isForCadre,
+          isReserved:apartupdateclass.isReserved,
+          type:apartupdateclass.type,
+          totalFee:apartupdateclass.totalFee,
+          selfPayFee:apartupdateclass.selfPayFee,
+          refundFee:apartupdateclass.refundFee,
+        },
+      }).then(response=>{
+        const {code}=response.data
+        if(code===2000){
+          getRoom(1,100)
+          alert("修改已完成，请刷新以查看修改结果")
+          setOpenUpdate(false)//关闭下方弹出菜单
+        }else{
+          const {msg}=response.data
+          alert(msg)
+          setOpenUpdate(false)
+        }
+      })
+      return apartidlist
+    })
+  }
 
   function roomDelete(id){
     _axios({
@@ -360,10 +460,8 @@ function App() {
           PubSub.publish('tablepage',tablepage)
           return tablepage
         })
-        // console.log('outer'+tablepage)
-        // console.log(list)
         setColums(roomcons)
-        inittablekeys(apartcons)
+        inittablekeys(roomcons)
         setApartIdList((apartidlist)=>{
           apartidlist=[];
           return apartidlist
@@ -376,6 +474,7 @@ function App() {
           })
           let tmp={};
           tmp.key=uuidv4();
+          tmp.index=i;
           tmp.name=list[i].name;
           if(list[i].sex===0){
             tmp.sex="man";
@@ -402,6 +501,111 @@ function App() {
           }else{
             tmp.isReserved='否'
           }
+
+          tmp.totalFee=list[i].totalFee
+          tmp.selfPayFee=list[i].selfPayFee
+          tmp.refundFee=list[i].refundFee
+
+          data.push(tmp)
+        }
+        setTableData(data)
+        setTableReturned(()=>{//通知子组件数据已经更新完成
+          PubSub.publish('tablereturned',true)
+          return true
+        })
+      }else{
+        alert(msg)
+      }
+    })
+  }
+
+  const bedcons=[
+    {
+      title: '床位名',
+      dataIndex: 'name',
+      key: 'name',
+    },
+    {
+      title: '所属房间的id',
+      dataIndex: 'roomId',
+      key: 'roomId',
+    },
+    {
+      title: '押金收据单号',
+      dataIndex: 'receiptId',
+      key: 'receiptId',
+    },
+    {
+      title: '是否正在使用中',//0非 1是
+      dataIndex: 'isInUse',
+      key: 'isInUse',
+    },
+    {
+      title: 'Action',
+      key: 'action',
+      render: (_,record,index) => (//record 本条目下的所有数据  index 当前条目编号，从0开始
+        <Space size="middle">
+          <Button type="primary" onClick={()=>openUpdateDrawer(index,record,'bed')}>修改此条目</Button>
+          <Button type="primary" onClick={()=>bedDelete(index)}>删除{record.name}</Button>
+        </Space>
+      ),
+    }
+  ]
+
+  function bedDelete(id){
+    _axios({
+      method:'DELETE',
+      url:`/api/management/bed/${apartidlist[id]}`,
+    }).then(response=>{
+      const {code}=response.data
+      if(code===2000){
+        getBed(1,100)
+      }else{
+        const {msg}=response.data
+        alert(msg)
+      }
+    })
+  }
+
+  function getBed(page,pagesize){
+    _axios.get('/api/management/bed',{
+      params:{
+        pageNum:page,
+        pageSize:pagesize,
+        apartmentId:1,
+        query:"",
+        roomId:"",
+        isInUse:"",
+      }
+    }).then(response=>{
+      const {code,msg}=response.data
+      const {list,total}=response.data.result
+      if(code===2000){
+        setTableTitle("床位列表")
+        setTablePage(Math.ceil(total/pagesize));//页码求值向上取整
+        setTablePage((tablepage)=>{
+          PubSub.publish('tablepage',tablepage)
+          return tablepage
+        })
+        setColums(bedcons)
+        inittablekeys(bedcons)
+        setApartIdList((apartidlist)=>{
+          apartidlist=[];
+          return apartidlist
+        })
+        let data=[]
+        for(let i=0;i<list.length;i++){
+          setApartIdList((apartidlist)=>{
+            apartidlist.push(list[i].id)
+            return apartidlist
+          })
+          let tmp={};
+          tmp.key=uuidv4();
+          tmp.index=i;
+          tmp.name=list[i].name;
+          tmp.roomId=list[i].roomId;
+          tmp.receiptId=list[i].receiptId;
+          tmp.isInUse=list[i].isInUse;
 
           data.push(tmp)
         }
@@ -436,8 +640,10 @@ function App() {
         <Home lognum={lognum} usermsg={usermsg} textitem={textitem} 
         columns={columns} tabledata={tabledata} tablepage={tablepage} tabletitle={tabletitle}
         logOut={logOut}
-        getApart={getApart} getRoom={getRoom} />
-        <DownDrawer title={drawertitle} placement="bottom" onClose={()=>setOpenUpdate(false)} open={openupdate} tableitems={tableitems} records={records} apartUpdate={apartUpdate} />
+        getApart={getApart} getRoom={getRoom} getBed={getBed} />
+        <DownDrawer type={updatedrawertype} title={drawertitle} placement="bottom" 
+        onClose={()=>setOpenUpdate(false)} open={openupdate} tableitems={tableitems} records={records}
+        apartUpdate={apartUpdate} roomUpdate={roomUpdate} />
       </div>
     )
   }
