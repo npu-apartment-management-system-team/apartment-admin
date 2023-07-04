@@ -37,14 +37,14 @@ jobs:
       - name: show relate dirs
         run: ls
 
-      - name: get in the new dic
-        run: cd .\electron-quick-start\
-
       - name: copy dist to current dic
-        run: Copy-Item ..\dist . -Recurse -Force
+        run: Copy-Item .\dist .\electron-quick-start\. -Recurse -Force
 
       - name: replace main.js
-        run: Copy-Item ..\electron-build\* . -Force
+        run: Copy-Item .\electron-build\* .\electron-quick-start\. -Force
+
+      - name: get in the new dic
+        run: cd .\electron-quick-start\
 
       - name: show dir
         run: ls
