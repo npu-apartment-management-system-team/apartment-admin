@@ -5,7 +5,7 @@ import './App.css'
 import Login from './Pages/Login/Login'
 import LoginHeader from './Component/LoginHeader/LoginHeader';
 import Register from './Pages/Register';
-import {PieChartOutlined} from '@ant-design/icons'
+import {PieChartOutlined,PlusOutlined} from '@ant-design/icons'
 import axios from 'axios';
 import imgUrl from './assets/images/apartment.svg'
 import _axios from './api';
@@ -14,6 +14,7 @@ import DownDrawer from './Component/DownDrawer';
 import { Button, Drawer, Input, Space } from 'antd';
 import { v4 as uuidv4 } from 'uuid';
 import PubSub, { countSubscriptions } from 'pubsub-js';
+import AddTable from './Component/AddTable';
 
 function getItem(label, key, icon, children, type) {
   return {
@@ -56,15 +57,25 @@ const textitem=[
       {route:'/apart'},
       {route:'/room'},
       {route:'/bed'},
-    ]
+    ],
+    addmessages:{//表单类项目 添加条目弹窗的提示文字
+      apart:'name为公寓名 position为公寓地址 location为经纬度地址',
+      room:'name为宿舍号 sex为性别，应填写“男”或“女” usage为宿舍用途 type为房间种类，应填写“n人间”，n为整数 isForCadre为干部房标识，应填写“是”或“否” isReserved代表此房间是否保留，应填写“是”或“否” totalFee为宿舍费用 selfPayFee为自费费用 refundFee为单位报销费用 ',
+      bed:'name为床位名 roomId为床位所在的宿舍号 receiptId为押金收据单号 isInUse代表床位是否已被占用，应填写“是”或“否” ',
+    }
   },
   {
     id:4,
-    name:"财务人员",
+    name:"财务管理员",
     item:[
       getItem('缴费统计表', '1', <PieChartOutlined />),
       getItem('催收信', '2', <PieChartOutlined />),
       getItem('宿舍情况查询', '3', <PieChartOutlined />),
+    ],
+    routers:[
+      {route:'/paylist'},
+      {route:'/collectmsg'},
+      {route:'/roomchexk'},
     ],
   }
 ]
@@ -73,6 +84,7 @@ function App() {
   const [loged,changeLoged]=useState(false);
   const [lognum,changeLognum]=useState(0);
   const [usermsg,setUserMsg]=useState(null);
+  const [userid,setUserId]=useState('');
 
   //ApartTable needs
   const [columns,setColums]=useState([])
@@ -90,20 +102,25 @@ function App() {
   const [apartidlist,setApartIdList]=useState([])
   const [updatedrawertype,setType]=useState('')
 
+  // const [openadd,setOpenAdd]=useState(false)
+  const [addButtons,setAddButtons]=useState(null)
+
+  // const [tableaddClass,setTableAddClass]=useState({})
+
   const [tablereturned,setTableReturned]=useState(false)
 
   const navigate = useNavigate()
   useEffect(()=>{//建立长连结
-    if(window.localStorage.getItem('token') !== null) {
-      // console.log(window.localStorage.getItem('token'))
-      let user={}
-      user.name=window.localStorage.getItem('user.name')
-      user.id=window.localStorage.getItem('user.id')
-      user.loginAccountId=window.localStorage.getItem('user.loginAccountId')
-      user.email=window.localStorage.getItem('user.email')
-      let num=window.localStorage.getItem('role')
-      login(num,user)
-    }
+    // if(window.localStorage.getItem('token') !== null) {
+    //   // console.log(window.localStorage.getItem('token'))
+    //   let user={}
+    //   user.name=window.localStorage.getItem('user.name')
+    //   user.id=window.localStorage.getItem('user.id')
+    //   user.loginAccountId=window.localStorage.getItem('user.loginAccountId')
+    //   user.email=window.localStorage.getItem('user.email')
+    //   let num=window.localStorage.getItem('role')
+    //   login(num,user)
+    // }
     axios.defaults.baseURL=import.meta.env.VITE_BASE_URL
     axios.get('/api/auth/hello')
   },[])
@@ -147,7 +164,7 @@ function App() {
       for(let i=0;i<colus.length-1;i++){
         keys.push(colus[i].dataIndex)
       }
-      console.log(keys)
+      // console.log(keys)
       return keys
     })
     setTableKeys((tablekeys)=>{//防止setState的异步更新取到旧值 set函数中收到的参数保证是最新值
@@ -180,7 +197,7 @@ function App() {
                 </div>
             )
             setApartUpdateClass((apartupdateclass)=>{
-              apartupdateclass[keys[i]]=records[keys[i]]
+              apartupdateclass[keys[i]]=records[keys[i]]//update对象初始化
               return apartupdateclass
             })
           }
@@ -192,17 +209,91 @@ function App() {
       return keys
     })
   }
-  function apartUpdate(index,datas){
+  function onAddDrawerChange(e){
+    setApartUpdateClass((addclass)=>{
+      addclass[e.target.id]=e.target.value
+      return addclass
+    })
+  }
+  function openAddDrawer(type){
+    setType(()=>{
+      return type;//下方更新框的类型
+    })
+    
+    setDrawerTitle(()=>{
+      return "新增"+type+"条目"
+    })
+    setTableKeys((keys)=>{
+      setRecords((records)=>{//同上，为保证取到两个最新值，调用需嵌套在对应set函数中
+        setTableItems(()=>{
+          let items=[]
+          for(let i=0;i<keys.length;i++){
+            if(keys[i]==='receiptId'||keys[i]==='isInUse'){//增加时不需要的属性值构建增加表时应跳过
+              continue
+            }
+            if(keys[i]==='location'){
+              items.push(
+                <div key={uuidv4()}>
+                    <p>{keys[i]}</p><Input id={keys[i]} onChange={onAddDrawerChange} defaultValue={'请输入合法经纬度,以英文逗号分隔'}/>
+                </div>
+              )
+            }else{
+              items.push(
+                <div key={uuidv4()}>
+                    <p>{keys[i]}</p><Input id={keys[i]} onChange={onAddDrawerChange} defaultValue={''}/>
+                </div>
+              ) 
+            }
+          }
+          return items
+        })
+        return records
+      })
+      return keys
+    })
+  }
+
+  function apartCheck(){
     let lon=[]
     setApartUpdateClass((apartupdateclass)=>{
       // console.log(apartupdateclass)
       lon=apartupdateclass.location.split(',')
+      if(lon.length!=2){
+        alert('Location格式不正确！')
+        return false
+      }
+      apartupdateclass.lon0=lon[0]
+      apartupdateclass.lon1=lon[1]
       return apartupdateclass
     })
-    if(lon.length!=2){
-      alert('Location格式不正确！')
-      return
-    }
+    return true
+  }
+  function apartAdd(){
+    if(!apartCheck()){return}//存在非法数据，不予发送请求
+    _axios({
+      method:'POST',
+      url:'/api/management/apartment',
+      data:{
+        foremanAdminId:lognum,
+        name:apartupdateclass.name,
+        position:apartupdateclass.position,
+        positionLongitude:apartupdateclass.lon1,
+        positionLatitude:apartupdateclass.lon0,
+        status:0,
+      }
+    }).then(response=>{
+      const {code}=response.data
+      if(code===2000){
+        getApart(1,100)
+        alert("增加已完成,请刷新页面以查看最新结果")
+      }else{
+        const{msg}=response.data
+        alert(msg)
+      }
+    })
+  }
+  function apartUpdate(index,datas){
+    if(!apartCheck()){return}//存在非法数据，不予发送请求
     setApartIdList((apartidlist)=>{//防止异步，保证访问到最新的apartidlist
       _axios({
         method:'PUT',
@@ -211,8 +302,8 @@ function App() {
           foremanAdminId:lognum,
           name:apartupdateclass.name,
           position:apartupdateclass.position,
-          positionLongitude:lon[1],
-          positionLatitude:lon[0],
+          positionLongitude:apartupdateclass.lon1,
+          positionLatitude:apartupdateclass.lon0,
           status:datas.status,//宿舍状态，0正常 1启用程序中 2弃用程序中 3已弃用
         }
       }).then(response=>{
@@ -231,17 +322,20 @@ function App() {
     })
   }
   function apartDelete(index){
-    _axios({
-      method:'DELETE',
-      url:`/api/management/apartment/${apartidlist[index]}`,
-    }).then(response=>{
-      const {code}=response.data
-      if(code===2000){
-        getApart(1,100)
-      }else{
-        const {msg}=response.data
-        alert(msg)
-      }
+    setApartIdList((apartidlist)=>{
+      _axios({
+        method:'DELETE',
+        url:`/api/management/apartment/${apartidlist[index]}`,
+      }).then(response=>{
+        const {code}=response.data
+        if(code===2000){
+          getApart(1,100)
+          alert("删除已完成,请刷新页面以查看最新结果")
+        }else{
+          const {msg}=response.data
+          alert(msg)
+        }
+      })
     })
   }
   function getApart(page,pagesize){
@@ -343,7 +437,7 @@ function App() {
     }
   ]
 
-  function roomUpdate(index,datas){
+  function roomCheck(){
     let flag=true;
     setApartUpdateClass((updateclass)=>{
       if(updateclass.sex==='man'||updateclass.sex==='男'){
@@ -381,14 +475,46 @@ function App() {
         updateclass.type=parseInt(updateclass.type.substring(0,updateclass.type.indexOf('人')))
       }
 
-      if(updateclass.totalFee!==updateclass.selfPayFee+updateclass.refundFee){
+      if(parseInt(updateclass.totalFee)!==parseInt(updateclass.selfPayFee)+parseInt(updateclass.refundFee)){
         alert('总价不等于单位报销部分和个人自理部分之和')
+        console.log('总'+updateclass.totalFee+'B'+updateclass.refundFee+'S'+updateclass.selfPayFee)
         flag=false
       }
 
       return updateclass
     })
-    if(!flag){return}//存在非法数据，不予发送请求
+    return flag
+  }
+  function roomAdd(){
+    if(!roomCheck()){return}//存在非法数据，不予发送请求
+    _axios({
+      method:'POST',
+      url:'/api/management/room',
+      data:{
+        apartmentId:1,
+        name:apartupdateclass.name,
+        sex:apartupdateclass.sex,
+        usage:apartupdateclass.usage,
+        isForCadre:apartupdateclass.isForCadre,
+        isReserved:apartupdateclass.isReserved,
+        type:apartupdateclass.type,
+        totalFee:apartupdateclass.totalFee,
+        selfPayFee:apartupdateclass.selfPayFee,
+        refundFee:apartupdateclass.refundFee,
+      }
+    }).then(response=>{
+      const {code}=response.data
+      if(code===2000){
+        getRoom(1,100)
+        alert("增加已完成,请刷新页面以查看最新结果")
+      }else{
+        const{msg}=response.data
+        alert(msg)
+      }
+    })
+  }
+  function roomUpdate(index){
+    if(!roomCheck()){return}//存在非法数据，不予发送请求
     setApartIdList((apartidlist)=>{//防止异步，保证访问到最新的apartidlist
       _axios({
         method:'PUT',
@@ -420,22 +546,23 @@ function App() {
       return apartidlist
     })
   }
-
   function roomDelete(id){
-    _axios({
-      method:'DELETE',
-      url:`/api/management/room/${apartidlist[id]}`,
-    }).then(response=>{
-      const {code}=response.data
-      if(code===2000){
-        getRoom(1,100)
-      }else{
-        const {msg}=response.data
-        alert(msg)
-      }
+    setApartIdList((apartidlist)=>{
+      _axios({
+        method:'DELETE',
+        url:`/api/management/room/${apartidlist[id]}`,
+      }).then(response=>{
+        const {code}=response.data
+        if(code===2000){
+          getRoom(1,100)
+          alert("删除已完成,请刷新页面以查看最新结果")
+        }else{
+          const {msg}=response.data
+          alert(msg)
+        }
+      })
     })
   }
-
   function getRoom(page,pagesize){
     // setTableReturned(()=>{
     //   PubSub.publish('tablereturned',false)
@@ -536,7 +663,7 @@ function App() {
       key: 'receiptId',
     },
     {
-      title: '是否正在使用中',//0非 1是
+      title: '床位使用情况',//0非 1是
       dataIndex: 'isInUse',
       key: 'isInUse',
     },
@@ -552,27 +679,94 @@ function App() {
     }
   ]
 
-  function bedDelete(id){
+  function bedCheck(){
+    let flag=true
+    setApartUpdateClass((updateclass)=>{
+      if(updateclass.isInUse==='是'){
+        updateclass.isInUse=1
+      }else if(updateclass.isInUse==='否'){
+        updateclass.isInUse=0
+      }else{
+        alert('床位使用情况格式非法')
+        flag=false
+      }
+      return updateclass
+    })
+    return flag
+  }
+  function bedAdd(){
+    // if(!bedCheck()){return}//存在非法数据，不予发送请求
     _axios({
-      method:'DELETE',
-      url:`/api/management/bed/${apartidlist[id]}`,
+      method:'POST',
+      url:'/api/management/bed',
+      data:{
+        name:apartupdateclass.name,
+        roomId:apartupdateclass.roomId,
+        // receiptId:apartupdateclass.receiptId,
+        // isInUse:apartupdateclass.isInUse,
+      }
     }).then(response=>{
       const {code}=response.data
       if(code===2000){
         getBed(1,100)
+        alert("增加已完成,请刷新页面以查看最新结果")
       }else{
-        const {msg}=response.data
+        const{msg}=response.data
         alert(msg)
       }
     })
   }
+  function bedUpdate(index){
+    if(!bedCheck()){return}//存在非法数据，不予发送请求
 
+    setApartIdList((apartidlist)=>{//防止异步，保证访问到最新的apartidlist
+      _axios({
+        method:'PUT',
+        url:`/api/management/bed/${apartidlist[index]}`,
+        data:{
+          name:apartupdateclass.name,
+          roomId:apartupdateclass.roomId,
+          receiptId:apartupdateclass.receiptId,
+          isInUse:apartupdateclass.isInUse
+        },
+      }).then(response=>{
+        const {code}=response.data
+        if(code===2000){
+          getBed(1,100)
+          alert("修改已完成，请刷新以查看修改结果")
+          setOpenUpdate(false)//关闭下方弹出菜单
+        }else{
+          const {msg}=response.data
+          alert(msg)
+          setOpenUpdate(false)
+        }
+      })
+      return apartidlist
+    })
+  }
+  function bedDelete(id){
+    setApartIdList((apartidlist)=>{
+      _axios({
+        method:'DELETE',
+        url:`/api/management/bed/${apartidlist[id]}`,
+      }).then(response=>{
+        const {code}=response.data
+        if(code===2000){
+          getBed(1,100)
+          alert("删除已完成,请刷新页面以查看最新结果")
+        }else{
+          const {msg}=response.data
+          alert(msg)
+        }
+      })
+    })
+  }
   function getBed(page,pagesize){
     _axios.get('/api/management/bed',{
       params:{
         pageNum:page,
         pageSize:pagesize,
-        apartmentId:1,
+        apartmentId:"",
         query:"",
         roomId:"",
         isInUse:"",
@@ -605,7 +799,11 @@ function App() {
           tmp.name=list[i].name;
           tmp.roomId=list[i].roomId;
           tmp.receiptId=list[i].receiptId;
-          tmp.isInUse=list[i].isInUse;
+          if(list[i].isInUse===1){
+            tmp.isInUse='是'
+          }else{
+            tmp.isInUse='否'
+          }
 
           data.push(tmp)
         }
@@ -621,29 +819,33 @@ function App() {
   }
   
   function login(num,user){
-    // console.log(user)
-    changeLoged(()=>{
+    changeLoged((loged)=>{
+      // console.log(loged)
       return true;
     })
     changeLognum(num);
+    setUserId(user.id)
+    // console.log('usernum'+num)
+    // console.log(loged)
     setUserMsg(user.name);
-    // getRoom(1,5)
   }
   function logOut(){
     window.localStorage.removeItem('token')
     changeLoged(false)
   }
-  // const user = memoryUtils.user;
+  // console.log(loged)
   if(loged){
     return (
       <div>
-        <Home lognum={lognum} usermsg={usermsg} textitem={textitem} 
+        <Home lognum={lognum} userid={userid} usermsg={usermsg} textitem={textitem} 
         columns={columns} tabledata={tabledata} tablepage={tablepage} tabletitle={tabletitle}
         logOut={logOut}
-        getApart={getApart} getRoom={getRoom} getBed={getBed} />
+        getApart={getApart} getRoom={getRoom} getBed={getBed}
+        openAddDrawer={openAddDrawer} addButtons={addButtons} tableitems={tableitems} 
+        apartAdd={apartAdd} roomAdd={roomAdd} bedAdd={bedAdd} />
         <DownDrawer type={updatedrawertype} title={drawertitle} placement="bottom" 
         onClose={()=>setOpenUpdate(false)} open={openupdate} tableitems={tableitems} records={records}
-        apartUpdate={apartUpdate} roomUpdate={roomUpdate} />
+        apartUpdate={apartUpdate} roomUpdate={roomUpdate} bedUpdate={bedUpdate} />
       </div>
     )
   }

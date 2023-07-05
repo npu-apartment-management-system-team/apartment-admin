@@ -2,18 +2,19 @@ import React, { useEffect, useState } from 'react'
 import { Button, Drawer, Input, Radio, Spin } from 'antd';
 
 export default function DownDrawer(props) {
-  const {type,title,placement,onClose,open,tableitems,records,apartUpdate,roomUpdate}=props
+  const {apartUpdate,roomUpdate,bedUpdate}=props
+  const {type,title,placement,onClose,open,tableitems,records}=props
   const [loadings, setLoadings] = useState(false);
   const [value,setValue]=useState(0)
-  const [updateClass,setUpdateClass]=useState({status:0})
+  const [apartupdateClass,setUpdateClass]=useState({status:0})
   // console.log(tableitems)
   function apartupdateClick(){
     setLoadings(true)
-    apartUpdate(records.index,updateClass)
+    apartUpdate(records.index,apartupdateClass)
     setLoadings(false)
   }
   function onapartChange(e){
-    setUpdateClass(()=>{
+    setUpdateClass((updateClass)=>{
       updateClass.status=e.target.value
       return updateClass
     })
@@ -22,15 +23,15 @@ export default function DownDrawer(props) {
 
   function roomupdateClick(){
     setLoadings(true)
-    console.log(records)
-    roomUpdate(records.index,updateClass)
+    // console.log(records)
+    roomUpdate(records.index)
     setLoadings(false)
   }
 
   function bedupdateClick(){
     setLoadings(true)
-    console.log(records)
-    roomUpdate(records.index,updateClass)
+    // console.log(records)
+    bedUpdate(records.index)
     setLoadings(false)
   }
   if(tableitems.length===0){
