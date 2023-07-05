@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import { Button, Pagination, Space, Spin, Table, Tag } from 'antd';
+
 import PubSub from 'pubsub-js';
+import TableAddList from '../TableAddList';
 
 const columns = [
     {
@@ -75,6 +77,8 @@ const columns = [
   ];
 
 export default function ApartTable(props) {
+  const {checkonly}=props
+  const {tableitems,openAddDrawer,addMsg,addfun}=props//add table needs
   const {getApart,getRoom,getBed}=props
   let { tabletype, columns,tabledata,tablepage,tabletitle}=props
   const [returned,changeReturned]=useState(false)
@@ -82,7 +86,7 @@ export default function ApartTable(props) {
     changeReturned(()=>{
       return data
     })
-    console.log(returned)
+    // console.log(returned)
   })
 
   //通过修改空对象实现组件强制刷新
@@ -113,17 +117,26 @@ export default function ApartTable(props) {
         <Spin/>
       </div>
     )
-  }
-  else{
+  }else if(checkonly){
+    return (
+      <div>
+        <Space direction="vertical" size={16}>
+          <h2>{tabletitle}</h2>
+          <Table columns={columns} dataSource={tabledata} pagination={false} />
+          {/* <Pagination showQuickJumper defaultCurrent={1} total={tablepage} onChange={onChange} /> */}
+        </Space>
+      </div>
+    )
+  }else{
     PubSub.subscribe('tablepage',(msgname,data)=>{
       tablepage=data
-      console.log(tablepage)
+      // console.log(tablepage)
     })
     return (
       <div>
         <Space direction="vertical" size={16}>
           <h2>{tabletitle}</h2>
-          <Button tabletype={tabletype} >增加</Button>
+          <TableAddList openAddDrawer={openAddDrawer} tableitems={tableitems} tabletype={tabletype} addMsg={addMsg} addfun={addfun} />
           <Table columns={columns} dataSource={tabledata} pagination={false} />
           {/* <Pagination showQuickJumper defaultCurrent={1} total={tablepage} onChange={onChange} /> */}
         </Space>
