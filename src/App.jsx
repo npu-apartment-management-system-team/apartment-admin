@@ -82,6 +82,19 @@ const textitem=[
       {route:'/collectmsg'},
       {route:'/roomchexk'},
     ],
+  },
+  {
+    id:5,
+  },
+  {
+    id:6,
+    name:'外部单位入住办理员',
+    item:[
+      getItem('入住申请审核', '1', <PieChartOutlined />),
+    ],
+    routers:[
+      {route:'/checkin'},
+    ],
   }
 ]
 

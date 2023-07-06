@@ -234,6 +234,7 @@ export default function Home(props) {
               <Content style={contentStyle}>
                   <Routes>
                       <Route path="/home/welcome" element={<Welcome job={textitem[lognum].name} usermsg={usermsg} />} />
+                      <Route path='/home/checkin' element={<Review lognum={lognum} />} />
                       
                       <Route path="*" element={<Navigate to="/home/welcome" />} />
                   </Routes>
