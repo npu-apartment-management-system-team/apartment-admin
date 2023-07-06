@@ -77,9 +77,10 @@ const columns = [
   ];
 
 export default function ApartTable(props) {
-  const {checkonly}=props
+  const {checkonly}=props//是否为只读表
+
   const {tableitems,openAddDrawer,addMsg,addfun}=props//add table needs
-  const {getApart,getRoom,getBed}=props
+  const {getApart,getRoom,getBed,getOutPay}=props
   let { tabletype, columns,tabledata,tablepage,tabletitle}=props
   const [returned,changeReturned]=useState(false)
   PubSub.subscribe('tablereturned',(msgname,data)=>{
@@ -101,11 +102,13 @@ export default function ApartTable(props) {
     }else if(tabletype==='room'){
       changeReturned(false)
       getRoom(1,100)
-      // console.log(tablepage)
       forceUpdate()
     }else if(tabletype==='bed'){
       changeReturned(false)
       getBed(1,100)
+    }else if(tabletype==='outpay'){
+      changeReturned(false)
+      getOutPay(1,100)
     }
   },[tabletype])
   function onChange(e){

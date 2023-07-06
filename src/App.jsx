@@ -42,6 +42,11 @@ const textitem=[
       getItem('床位编号录入', '2', <PieChartOutlined />),
       getItem('人脸录入确认', '3', <PieChartOutlined />),
     ],
+    routers:[
+      {route:'/checkin'},
+      {route:'/bedid'},
+      {route:'/face'},
+    ],
   },
   {
     id:3,
@@ -648,6 +653,11 @@ function App() {
 
   const bedcons=[
     {
+      title: '床位ID',
+      dataIndex: 'id',
+      key: 'id',
+    },
+    {
       title: '床位名',
       dataIndex: 'name',
       key: 'name',
@@ -796,6 +806,7 @@ function App() {
           let tmp={};
           tmp.key=uuidv4();
           tmp.index=i;
+          tmp.id=list[i].id;
           tmp.name=list[i].name;
           tmp.roomId=list[i].roomId;
           tmp.receiptId=list[i].receiptId;
@@ -808,6 +819,95 @@ function App() {
           data.push(tmp)
         }
         setTableData(data)
+        setTableReturned(()=>{//通知子组件数据已经更新完成
+          PubSub.publish('tablereturned',true)
+          return true
+        })
+      }else{
+        alert(msg)
+      }
+    })
+  }
+
+  const outpaycons=[
+    {
+      title: '支票ID',
+      dataIndex: 'chequeId',
+      key: 'chequeId',
+    },
+    {
+      title: '公寓ID',
+      dataIndex: 'departmentId',
+      key: 'departmentId',
+    },
+    {
+      title: '是否已支付',//0非 1是
+      dataIndex: 'hasPaid',
+      key: 'hasPaid',
+    },
+    {
+      title: '创建时间',
+      dataIndex: 'createTime',
+      key: 'createTime',
+    },
+    {
+        title: '支付时间',
+        dataIndex: 'payTime',
+        key: 'payTime',
+    },
+    {
+        title: '金额',
+        dataIndex: 'price',
+        key: 'price',
+    },
+]
+
+  function getOutPay(page,pagesize){
+    _axios.get('/api/finance/center/withhold',{
+      params:{
+        pageNum:page,
+        pageSize:pagesize,
+      }
+    }).then(response=>{
+      const {code,msg}=response.data
+      const {list,total}=response.data.result
+      if(code===2000){
+        setTableTitle("外部单位代扣表")
+        // console.log(list)
+        setColums(outpaycons)
+        inittablekeys(outpaycons)
+
+        setApartIdList((apartidlist)=>{
+          apartidlist=[];
+          return apartidlist
+        })
+        let data=[]
+        for(let i=0;i<list.length;i++){
+          setApartIdList((apartidlist)=>{
+            apartidlist.push(list[i].id)
+            return apartidlist
+          })
+          let tmp={};
+          tmp.key=uuidv4();
+          tmp.index=i;
+          tmp.id=list[i].id;
+          tmp.chequeId=list[i].chequeId;
+          tmp.departmentId=list[i].departmentId;
+
+          if(list[i].hasPaid===1){
+            tmp.hasPaid='是'
+          }else{
+            tmp.hasPaid='否'
+          }
+
+          tmp.createTime=list[i].createTime;
+          tmp.payTime=list[i].payTime;
+          tmp.price=list[i].price;
+
+          data.push(tmp)
+        }
+        setTableData(data)
+
         setTableReturned(()=>{//通知子组件数据已经更新完成
           PubSub.publish('tablereturned',true)
           return true
@@ -840,7 +940,7 @@ function App() {
         <Home lognum={lognum} userid={userid} usermsg={usermsg} textitem={textitem} 
         columns={columns} tabledata={tabledata} tablepage={tablepage} tabletitle={tabletitle}
         logOut={logOut}
-        getApart={getApart} getRoom={getRoom} getBed={getBed}
+        getApart={getApart} getRoom={getRoom} getBed={getBed} getOutPay={getOutPay}
         openAddDrawer={openAddDrawer} addButtons={addButtons} tableitems={tableitems} 
         apartAdd={apartAdd} roomAdd={roomAdd} bedAdd={bedAdd} />
         <DownDrawer type={updatedrawertype} title={drawertitle} placement="bottom" 

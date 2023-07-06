@@ -12,6 +12,8 @@ import AddTable from '../../Component/AddTable';
 import { countSubscriptions } from 'pubsub-js';
 import CollectMsg from '../../Component/CollectMsg';
 import ReceiveBox from '../../Component/ReceiveBox';
+import Review from '../../Component/Review';
+import PayTable from '../../Component/PayTable';
 
 
 const headerStyle = {
@@ -42,7 +44,7 @@ export default function Home(props) {
   const {openAddDrawer,tableitems}=props
   const {apartAdd,roomAdd,bedAdd}=props
 
-  const {getApart,getRoom,getBed}=props
+  const {getApart,getRoom,getBed,getOutPay}=props
   const{lognum,userid,textitem,usermsg,columns,tabledata,tablepage,tabletitle}=props
   const routers=textitem[lognum].routers
   const [collapsed, setCollapsed] = useState(false);
@@ -101,6 +103,7 @@ export default function Home(props) {
               <Content style={contentStyle}>
                   <Routes>
                       <Route path="/home/welcome" element={<Welcome job={textitem[lognum].name} usermsg={usermsg} />} />
+                      <Route path='/home/checkin' element={<Review lognum={lognum} />} />
                       
                       <Route path="*" element={<Navigate to="/home/welcome" />} />
                   </Routes>
@@ -130,6 +133,9 @@ export default function Home(props) {
               <Content style={contentStyle}>
                   <Routes>
                       <Route path="/home/welcome" element={<Welcome job={textitem[lognum].name} usermsg={usermsg} />} />
+                      <Route path='/home/promise' element={<Review lognum={lognum}
+                      tableitems={tableitems}
+                      getBed={getBed} tabletype={'bed'} columns={columns} tabledata={tabledata} tablepage={tablepage} tabletitle={tabletitle} />} />
                       <Route path='/home/apart' element={<ApartTable tableitems={tableitems} openAddDrawer={()=>openAddDrawer('apart')} addMsg={textitem[lognum].addmessages.apart} addfun={apartAdd}
                       getApart={getApart} tabletype={'apart'} columns={columns} tabledata={tabledata} tablepage={tablepage} tabletitle={tabletitle} />} />
   
@@ -167,6 +173,8 @@ export default function Home(props) {
               <Content style={contentStyle}>
                   <Routes>
                       <Route path="/home/welcome" element={<Welcome job={textitem[lognum].name} usermsg={usermsg} />} />
+                      <Route path='/home/paylist' element={<PayTable tableitems={tableitems}
+                      getOutPay={getOutPay} tabletype={'bed'} columns={columns} tabledata={tabledata} tablepage={tablepage} tabletitle={tabletitle} />} />
                       <Route path="/home/collectmsg" element={<CollectMsg lognum={lognum} userid={userid} />} />
                       
                       <Route path="*" element={<Navigate to="/home/welcome" />} />

@@ -190,8 +190,8 @@ export default function CollectMsg(props) {
       <h1>催收信发送</h1>
       <h3>发送给用户</h3>
       <Transferm type={'user'} transdata={transdata} send={send} />
-      <h3>发送给管理员</h3>
-      <Transferm type={'admin'} transdata={admintransdata} send={send} />
+      {/* <h3>发送给管理员</h3>
+      <Transferm type={'admin'} transdata={admintransdata} send={send} /> */}
       {/* <ApartTable columns={columns} tabledata={tabledata} tabletitle={tabletitle} checkonly={true} /> */}
     </div>
   )
