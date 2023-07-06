@@ -1,6 +1,5 @@
 import axios from '../api/index'
 import OSS from 'ali-oss'
-import { revertFromUTF8 } from './utf8Util.js'
 
 export const headers = {
     // 指定该Object被下载时的网页缓存行为。
