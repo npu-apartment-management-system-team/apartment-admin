@@ -1013,7 +1013,9 @@ function App () {
         <div className="login-box">
             <div className='glass' style={{borderRadius: '10px'}}>
                 <div className='innerlogin'>
-                    <p>公寓员工管理系统</p>
+                    <p style={{ color: 'white', fontSize: '35px' }}>
+                        <b>杭房段员工公寓管理系统</b>
+                    </p>
                     <img alt={ '员工公寓管理系统' } src={imgUrl}/>
                     {/* <div>
             <LoginHeader changeNav={changeNav}/>
