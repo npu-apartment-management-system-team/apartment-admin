@@ -74,8 +74,10 @@ export default function Review(props){
         axios.defaults.baseURL=import.meta.env.VITE_BASE_URL
         if(lognum===3){
             getReview(1,100)
-        }else{
+        }else if(lognum===2){
             getOtherReview(1,100)
+        }else{
+            getOtherReview6(1,100)
         }
         
     },[])
@@ -210,6 +212,61 @@ export default function Review(props){
             }
         })
     }
+    function getOtherReview6(page,pagesize){
+        _axios({
+            method:'GET',
+            url:`/api/application/apply/status/department?pageNum=${page}&pageSize=${pagesize}`
+        }).then(response=>{
+            const{code,result}=response.data
+            if(code===2000){
+                const {list}=result
+                if(list.length===0){
+                    setNoApps(true)
+                    PubSub.publish('cardsreturned',true)
+                    return 
+                }
+                let data=[]
+                for(let i=0;i<list.length;i++){
+                    let tmp={}
+                    tmp.key=uuidv4()
+
+                    tmp.id=list[i].id;
+                    tmp.userId=list[i].userId;
+                    tmp.paymentId=list[i].paymentId;
+
+                    if(list[i].type===0){
+                        tmp.type='入住';
+                    }else if(list[i].type===1){
+                        tmp.type='调宿'
+                    }else if(list[i].type===2){
+                        tmp.type='退宿'
+                    }
+                    
+                    tmp.fileUrl=list[i].fileUrl;
+                    tmp.applicationStatus=list[i].applicationStatus;
+
+                    if(list[i].depositStatus===0){
+                        tmp.depositStatus='未缴纳'
+                    }else if(list[i].depositStatus===1){
+                        tmp.depositStatus='已缴纳'
+                    }else if(list[i].depositStatus===2){
+                        tmp.depositStatus='已退回'
+                    }
+                    
+                    tmp.createTime=list[i].createTime;
+                    tmp.updateTime=list[i].updateTime;
+
+                    data.push(tmp)
+                }
+                setReviewData(data)
+                buildCards()
+                PubSub.publish('cardsreturned',true)
+            }else{
+                const{msg}=response.data
+                alert(msg)
+            }
+        })
+    }
 
     function giveBed(){
         setModelOpen(true)
@@ -272,13 +329,40 @@ export default function Review(props){
             }
         })
     }
+    function reviewTheApp6(){
+        _axios({
+            method:'POST',
+            url:'/api/application/apply/status/department',
+            data:{
+                id:reviewdata[index].id,
+                pass:canpass
+            }
+        }).then(response=>{
+            const {code}=response.data
+            if(code===2000){
+                alert('审批完成')
+                getOtherReview6(1,100)
+            }else{
+                const{msg}=response.data
+                alert(msg)
+            }
+        })
+    }
     function agree(){
         changePass(true)
-        reviewTheApp()
+        if(lognum===2){
+            reviewTheApp()
+        }else if(lognum===6){
+            reviewTheApp6()
+        }
     }
     function reject(){
         changePass(false)
-        reviewTheApp()
+        if(lognum===2){
+            reviewTheApp()
+        }else if(lognum===6){
+            reviewTheApp6()
+        }
     }
 
     function flushf5(){
@@ -378,6 +462,67 @@ export default function Review(props){
             </div>
         )
     }else if(lognum===2){
+        return (
+            <div>
+                <Divider orientation="middle">申请页面</Divider>
+                <Row gutter={[16, 20]}>
+                    {carditems}
+                </Row>
+                <Drawer width={640} placement="right" closable={false} onClose={onClose} open={open}>
+                    <p
+                        className="site-description-item-profile-p"
+                        style={{
+                            marginBottom: 24,
+                        }}
+                    >
+                        申请表
+                    </p>
+                    <br/>
+                    <Row>
+                        <Col span={12}>
+                            <DescriptionItem title="ID" content={reviewdata[index].id} />
+                        </Col>
+                        <Col span={12}>
+                            <DescriptionItem title="UserID" content={reviewdata[index].userId} />
+                        </Col>
+                    </Row>
+                    <Row>
+                        <Col span={12}>
+                            <DescriptionItem title="Type" content={reviewdata[index].type} />
+                        </Col>
+                        <Col span={12}>
+                            <DescriptionItem title="ApplicationStatus" content={reviewdata[index].applicationStatus} />
+                        </Col>
+                    </Row>
+                    <Row>
+                        <Col span={24}>
+                            <DescriptionItem title="DepositStatus" content={reviewdata[index].depositStatus} />
+                        </Col>
+                        <Col span={24}>
+                            <DescriptionItem title="PaymentId" content={reviewdata[index].paymentId} />
+                        </Col>
+                    </Row>
+                    <Row>
+                        <Col span={24}>
+                            <DescriptionItem title="createTime" content={reviewdata[index].createTime} />
+                        </Col>
+                        <Col span={24}>
+                            <DescriptionItem title="updateTime" content={reviewdata[index].updateTime} />
+                        </Col>
+                    </Row>
+                    <Row>
+                        <Col span={24}>
+                            <a href={reviewdata[index].fileUrl}>申请详情</a>
+                        </Col>
+                    </Row>
+                    <Divider />
+                    <Button onClick={onClose}>Back</Button>
+                    <Button type='primary' onClick={agree}>批准</Button>
+                    <Button onClick={reject}>驳回</Button>
+                </Drawer>
+            </div>
+        )
+    }else if(lognum===6){
         return (
             <div>
                 <Divider orientation="middle">申请页面</Divider>
