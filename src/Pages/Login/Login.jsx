@@ -1,6 +1,6 @@
 import React from 'react';
 import { EyeInvisibleOutlined, EyeTwoTone, InfoCircleOutlined, UserOutlined } from '@ant-design/icons';
-import { Button, Input, Tooltip } from 'antd';
+import { Button, Input, Tooltip, message } from 'antd';
 import { useState } from 'react';
 import _axios from '../../api';
 import { encrypt } from '../../utils/jsencrypt';
@@ -11,6 +11,9 @@ export default function Login(props) {
     const [username,setUsername]=useState(initusername);
     const [password,setPassword]=useState(initpassword);
     const [loadings, setLoadings] = useState(false);
+
+    const [messageApi, contextHolder] = message.useMessage();
+
     function usernamechange(e){
         setUsername(()=>{
             return e.target.value
@@ -53,13 +56,14 @@ export default function Login(props) {
           else{
             const {msg}=response.data
             setPassword("")//登录失败时清空密码
-            alert(msg)
+            messageApi.info(msg)
           }
           setLoadings(false)
         })
     }
   return (
     <div>
+      {contextHolder}
       <Input
       value={username}
       onChange={usernamechange}

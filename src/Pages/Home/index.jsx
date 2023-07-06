@@ -14,6 +14,7 @@ import CollectMsg from '../../Component/CollectMsg';
 import ReceiveBox from '../../Component/ReceiveBox';
 import Review from '../../Component/Review';
 import PayTable from '../../Component/PayTable';
+import UploadFace from '../../Component/UploadFace';
 
 
 const headerStyle = {
@@ -205,6 +206,8 @@ export default function Home(props) {
               <Content style={contentStyle}>
                   <Routes>
                       <Route path="/home/welcome" element={<Welcome job={textitem[lognum].name} usermsg={usermsg} />} />
+                      <Route path='/home/checkin' element={<Review lognum={lognum} />} />
+                      <Route path='/home/face' element={<UploadFace />} />
                       
                       <Route path="*" element={<Navigate to="/home/welcome" />} />
                   </Routes>

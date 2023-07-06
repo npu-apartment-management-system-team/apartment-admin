@@ -36,43 +36,39 @@ export const createFileNameUUID = () => {
 
 // 注意 这样的语法(在模块顶层使用await without 一个 async) 不被低级浏览器支持 需要引入并配置插件
 // npm install vite-plugin-top-level-await
-const token = await axios.get(import.meta.env.VITE_OSS_STS_URL)
 
-const client = new OSS({
-    endpoint: 'oss-cn-shanghai.aliyuncs.com', //填写Bucket所在地域
-    accessKeyId: token.data.AccessKeyId,
-    accessKeySecret: token.data.AccessKeySecret,
-    // STS临时授权
-    stsToken: token.data.SecurityToken,
-    bucket: 'wangminan-shanghai-files', // 填写Bucket名称。
-    useFetch: true, // 支持上传大于100KB的文件
-    secure: true, // 返回的url为https
-    refreshSTSToken: async () => {
-        const refreshToken = await axios.get(import.meta.env.VITE_OSS_STS_URL);
-        return {
-            accessKeyId: refreshToken.AccessKeyId,
-            accessKeySecret: refreshToken.AccessKeySecret,
-            stsToken: refreshToken.SecurityToken
-        };
-    }
-})
+const getStsToken = async () => {
+    return await axios.get(import.meta.env.VITE_OSS_STS_URL)
+}
 
-export const putFile = async (name, folderName, file) => {
+export const putFile = async (folderName, name, file) => {
+
+    const token = await getStsToken()
+
+    const client = new OSS({
+        endpoint: 'oss-cn-shanghai.aliyuncs.com', //填写Bucket所在地域
+        accessKeyId: token.data.AccessKeyId,
+        accessKeySecret: token.data.AccessKeySecret,
+        // STS临时授权
+        stsToken: token.data.SecurityToken,
+        bucket: 'wangminan-shanghai-files', // 填写Bucket名称。
+        useFetch: true, // 支持上传大于100KB的文件
+        secure: true, // 返回的url为https
+        refreshSTSToken: async () => {
+            const refreshToken = await axios.get(import.meta.env.VITE_OSS_STS_URL);
+            return {
+                accessKeyId: refreshToken.AccessKeyId,
+                accessKeySecret: refreshToken.AccessKeySecret,
+                stsToken: refreshToken.SecurityToken
+            };
+        }
+    })
+
     // 填写OSS文件完整路径和本地文件的完整路径。OSS文件完整路径中不能包含Bucket名称。
     // 如果本地文件的完整路径中未指定本地路径，则默认从示例程序所属项目对应本地路径中上传文件。
     return await client.put(
         folderName + name + '_' + createFileNameUUID() + '.' + file.name.split('.')[1],
         file,
         {headers}
-    )
-}
-
-// 删除原有文件
-export const deleteFile = async (folderName, name) => {
-    // 填写OSS文件完整路径和本地文件的完整路径。OSS文件完整路径中不能包含Bucket名称。
-    // 如果本地文件的完整路径中未指定本地路径，则默认从示例程序所属项目对应本地路径中上传文件。
-    return await client.delete(
-        // 注意UTF-8转码 否则delete的请求路径中将出现中文问题
-        revertFromUTF8(folderName + name)
     )
 }

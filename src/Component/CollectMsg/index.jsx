@@ -4,7 +4,7 @@ import axios from 'axios'
 import { v4 as uuidv4 } from 'uuid';
 import PubSub, { countSubscriptions } from 'pubsub-js';
 import ApartTable from '../ApartTable'
-import { Button, Space } from 'antd';
+import { Button, Space, message } from 'antd';
 import Transferm from '../Transfer';
 
 const usercons=[
@@ -51,6 +51,8 @@ export default function CollectMsg(props) {
   const [admintransdata,setAdminTransData]=useState([])
   const {lognum,userid}=props
 
+  const [messageApi, contextHolder] = message.useMessage();
+
   useEffect(()=>{
     axios.defaults.baseURL=import.meta.env.VITE_BASE_URL
     getUserList(1,100)
@@ -70,9 +72,9 @@ export default function CollectMsg(props) {
         }).then(response=>{
             const{code,msg}=response.data
             if(code===2000){
-                alert('发送成功')
+                messageApi.info('发送成功')
             }else{
-                alert(msg)
+                messageApi.info(msg)
             }
         })
     }else if(way==='admin'){
@@ -88,13 +90,13 @@ export default function CollectMsg(props) {
         }).then(response=>{
             const{code,msg}=response.data
             if(code===2000){
-                alert('发送成功')
+                messageApi.info('发送成功')
             }else{
-                alert(msg)
+                messageApi.info(msg)
             }
         })
     }else{
-        alert('发送对象非法')
+        messageApi.info('发送对象非法')
     }
   }
 //   function inittablekeys(colus){
@@ -154,7 +156,7 @@ export default function CollectMsg(props) {
             // })
         }else{
             const {msg}=response.data
-            alert(msg)
+            messageApi.info(msg)
         }
     })
   }
@@ -181,12 +183,13 @@ export default function CollectMsg(props) {
             setAdminTransData(tdata)
         }else{
             const {msg}=response.data
-            alert(msg)
+            messageApi.info(msg)
         }
     })
   }
   return (
     <div>
+        {contextHolder}
       <h1>催收信发送</h1>
       <h3>发送给用户</h3>
       <Transferm type={'user'} transdata={transdata} send={send} />

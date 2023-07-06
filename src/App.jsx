@@ -11,7 +11,7 @@ import imgUrl from './assets/images/apartment.svg'
 import _axios from './api';
 import Home from './Pages/Home';
 import DownDrawer from './Component/DownDrawer';
-import { Button, Drawer, Input, Space } from 'antd';
+import { Button, Drawer, Input, Space, message } from 'antd';
 import { v4 as uuidv4 } from 'uuid';
 import PubSub, { countSubscriptions } from 'pubsub-js';
 import AddTable from './Component/AddTable';
@@ -38,7 +38,7 @@ const textitem=[
     id:2,
     name:"入住办理员",
     item:[
-      getItem('入住申请审核', '1', <PieChartOutlined />),
+      getItem('住宿申请审核', '1', <PieChartOutlined />),
       getItem('床位编号录入', '2', <PieChartOutlined />),
       getItem('人脸录入确认', '3', <PieChartOutlined />),
     ],
@@ -52,7 +52,7 @@ const textitem=[
     id:3,
     name:"宿舍调配员",
     item:[
-      getItem('住/调宿申请', '1', <PieChartOutlined />),
+      getItem('宿舍分配', '1', <PieChartOutlined />),
       getItem('公寓管理', '2', <PieChartOutlined />),
       getItem('房间管理', '3', <PieChartOutlined />),
       getItem('床位管理', '4', <PieChartOutlined />),
@@ -85,6 +85,15 @@ const textitem=[
   },
   {
     id:5,
+    name:'宿舍管理班组',
+    item:[
+      getItem('待办申请', '1', <PieChartOutlined />),
+      getItem('人脸识别', '2', <PieChartOutlined />),
+    ],
+    routers:[
+      {route:'/checkin'},
+      {route:'/face'}
+    ]
   },
   {
     id:6,
@@ -126,6 +135,8 @@ function App() {
   // const [tableaddClass,setTableAddClass]=useState({})
 
   const [tablereturned,setTableReturned]=useState(false)
+
+  const [messageApi, contextHolder] = message.useMessage();
 
   const navigate = useNavigate()
   useEffect(()=>{//建立长连结
@@ -277,7 +288,7 @@ function App() {
       // console.log(apartupdateclass)
       lon=apartupdateclass.location.split(',')
       if(lon.length!=2){
-        alert('Location格式不正确！')
+        messageApi.info('Location格式不正确！')
         return false
       }
       apartupdateclass.lon0=lon[0]
@@ -303,10 +314,10 @@ function App() {
       const {code}=response.data
       if(code===2000){
         getApart(1,100)
-        alert("增加已完成,请刷新页面以查看最新结果")
+        messageApi.info("增加已完成,请刷新页面以查看最新结果")
       }else{
         const{msg}=response.data
-        alert(msg)
+        messageApi.info(msg)
       }
     })
   }
@@ -328,11 +339,11 @@ function App() {
         const {code}=response.data
         if(code===2000){
           getApart(1,100)
-          alert("修改已完成，请刷新以查看修改结果")
+          messageApi.info("修改已完成，请刷新以查看修改结果")
           setOpenUpdate(false)//关闭下方弹出菜单
         }else{
           const {msg}=response.data
-          alert(msg)
+          messageApi.info(msg)
           setOpenUpdate(false)//关闭下方弹出菜单
         }
       })
@@ -348,10 +359,10 @@ function App() {
         const {code}=response.data
         if(code===2000){
           getApart(1,100)
-          alert("删除已完成,请刷新页面以查看最新结果")
+          messageApi.info("删除已完成,请刷新页面以查看最新结果")
         }else{
           const {msg}=response.data
-          alert(msg)
+          messageApi.info(msg)
         }
       })
     })
@@ -392,7 +403,7 @@ function App() {
           return true
         })
       }else{
-        alert(msg)
+        messageApi.info(msg)
       }
     })
   }
@@ -463,7 +474,7 @@ function App() {
       }else if(updateclass.sex==='woman'||updateclass.sex==='女'){
         updateclass.sex=1
       }else{
-        alert('性别格式非法')
+        messageApi.info('性别格式非法')
         flag=false
       }
 
@@ -472,7 +483,7 @@ function App() {
       }else if(updateclass.isForCadre==='否'){
         updateclass.isForCadre=0
       }else{
-        alert('干部房状态格式非法')
+        messageApi.info('干部房状态格式非法')
         flag=false
       }
 
@@ -481,7 +492,7 @@ function App() {
       }else if(updateclass.isReserved==='否'){
         updateclass.isReserved=0
       }else{
-        alert('保留间状态格式非法')
+        messageApi.info('保留间状态格式非法')
         flag=false
       }
 
@@ -494,7 +505,7 @@ function App() {
       }
 
       if(parseInt(updateclass.totalFee)!==parseInt(updateclass.selfPayFee)+parseInt(updateclass.refundFee)){
-        alert('总价不等于单位报销部分和个人自理部分之和')
+        messageApi.info('总价不等于单位报销部分和个人自理部分之和')
         console.log('总'+updateclass.totalFee+'B'+updateclass.refundFee+'S'+updateclass.selfPayFee)
         flag=false
       }
@@ -524,10 +535,10 @@ function App() {
       const {code}=response.data
       if(code===2000){
         getRoom(1,100)
-        alert("增加已完成,请刷新页面以查看最新结果")
+        messageApi.info("增加已完成,请刷新页面以查看最新结果")
       }else{
         const{msg}=response.data
-        alert(msg)
+        messageApi.info(msg)
       }
     })
   }
@@ -553,11 +564,11 @@ function App() {
         const {code}=response.data
         if(code===2000){
           getRoom(1,100)
-          alert("修改已完成，请刷新以查看修改结果")
+          messageApi.info("修改已完成，请刷新以查看修改结果")
           setOpenUpdate(false)//关闭下方弹出菜单
         }else{
           const {msg}=response.data
-          alert(msg)
+          messageApi.info(msg)
           setOpenUpdate(false)
         }
       })
@@ -573,19 +584,15 @@ function App() {
         const {code}=response.data
         if(code===2000){
           getRoom(1,100)
-          alert("删除已完成,请刷新页面以查看最新结果")
+          messageApi.info("删除已完成,请刷新页面以查看最新结果")
         }else{
           const {msg}=response.data
-          alert(msg)
+          messageApi.info(msg)
         }
       })
     })
   }
   function getRoom(page,pagesize){
-    // setTableReturned(()=>{
-    //   PubSub.publish('tablereturned',false)
-    //   return false
-    // })
     _axios.get('/api/management/room',{
       params:{
         pageNum:page,
@@ -659,7 +666,7 @@ function App() {
           return true
         })
       }else{
-        alert(msg)
+        messageApi.info(msg)
       }
     })
   }
@@ -710,7 +717,7 @@ function App() {
       }else if(updateclass.isInUse==='否'){
         updateclass.isInUse=0
       }else{
-        alert('床位使用情况格式非法')
+        messageApi.info('床位使用情况格式非法')
         flag=false
       }
       return updateclass
@@ -732,10 +739,10 @@ function App() {
       const {code}=response.data
       if(code===2000){
         getBed(1,100)
-        alert("增加已完成,请刷新页面以查看最新结果")
+        messageApi.info("增加已完成,请刷新页面以查看最新结果")
       }else{
         const{msg}=response.data
-        alert(msg)
+        messageApi.info(msg)
       }
     })
   }
@@ -756,11 +763,11 @@ function App() {
         const {code}=response.data
         if(code===2000){
           getBed(1,100)
-          alert("修改已完成，请刷新以查看修改结果")
+          messageApi.info("修改已完成，请刷新以查看修改结果")
           setOpenUpdate(false)//关闭下方弹出菜单
         }else{
           const {msg}=response.data
-          alert(msg)
+          messageApi.info(msg)
           setOpenUpdate(false)
         }
       })
@@ -776,10 +783,10 @@ function App() {
         const {code}=response.data
         if(code===2000){
           getBed(1,100)
-          alert("删除已完成,请刷新页面以查看最新结果")
+          messageApi.info("删除已完成,请刷新页面以查看最新结果")
         }else{
           const {msg}=response.data
-          alert(msg)
+          messageApi.info(msg)
         }
       })
     })
@@ -837,7 +844,7 @@ function App() {
           return true
         })
       }else{
-        alert(msg)
+        messageApi.info(msg)
       }
     })
   }
@@ -926,7 +933,7 @@ function App() {
           return true
         })
       }else{
-        alert(msg)
+        messageApi.info(msg)
       }
     })
   }
@@ -950,6 +957,7 @@ function App() {
   if(loged){
     return (
       <div>
+        {contextHolder}
         <Home lognum={lognum} userid={userid} usermsg={usermsg} textitem={textitem} 
         columns={columns} tabledata={tabledata} tablepage={tablepage} tabletitle={tabletitle}
         logOut={logOut}

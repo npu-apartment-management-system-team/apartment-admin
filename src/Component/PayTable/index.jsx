@@ -1,4 +1,4 @@
-import { Button, Spin } from 'antd'
+import { Button, Spin, message } from 'antd'
 import axios from 'axios'
 import React, { useEffect, useState } from 'react'
 import _axios from '../../api'
@@ -13,6 +13,8 @@ export default function PayTable(props) {
   const {getOutPay}=props
   const { tabletype, columns,tabledata,tablepage,tabletitle,tableitems}=props
   const [outtablereturned,setOutTableReturned]=useState(false)
+
+  const [messageApi, contextHolder] = message.useMessage();
 
   useEffect(()=>{
     axios.defaults.baseURL=import.meta.env.VITE_BASE_URL
@@ -32,7 +34,7 @@ export default function PayTable(props) {
             setOutReturned(true)
         }else{
             const{msg}=response.data
-            alert(msg)
+            messageApi.info(msg)
         }
     })
   }
@@ -48,7 +50,7 @@ export default function PayTable(props) {
             setPersonReturned(true)
         }else{
             const{msg}=response.data
-            alert(msg)
+            messageApi.info(msg)
         }
     })
   }
@@ -65,6 +67,7 @@ export default function PayTable(props) {
     return (
         <div>
         {/* <a href={outpaylink}>下载外部单位代扣表</a> */}
+        {contextHolder}
         <Button onClick={downloadOutPay} >下载外部单位代扣表</Button>
         <ApartTable tableitems={tableitems} checkonly={true} tabletype={'outpay'} getOutPay={getOutPay}
         columns={columns} tabledata={tabledata} tablepage={tablepage} tabletitle={tabletitle} />

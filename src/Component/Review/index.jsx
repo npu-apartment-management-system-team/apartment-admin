@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react'
-import {Button, Card, Col, Divider, Drawer, Input, Modal, Pagination, Row, Space, Spin, Table, Tag} from 'antd';
+import {Button, Card, Col, Divider, Drawer, Input, Modal, Pagination, Row, Space, Spin, Table, Tag, message} from 'antd';
 import axios from 'axios';
 import _axios from '../../api';
 import { v4 as uuidv4 } from 'uuid';
@@ -68,16 +68,20 @@ export default function Review(props){
 
     const [noApps,setNoApps]=useState(false)
 
+    const [messageApi, contextHolder] = message.useMessage();
+
     const navigate=useNavigate()
 
     useEffect(()=>{
         axios.defaults.baseURL=import.meta.env.VITE_BASE_URL
         if(lognum===3){
-            getReview(1,100)
+            getReview(1,100,'/api/application/apply/status/center')
         }else if(lognum===2){
-            getOtherReview(1,100)
+            getReview(1,100,'/api/application/apply/status/center/checkin')
+        }else if(lognum===5){
+            getReview(1,100,'/api/application/apply/status/apartment')
         }else{
-            getOtherReview6(1,100)
+            getReview(1,100,'/api/application/apply/status/department')
         }
         
     },[])
@@ -102,65 +106,12 @@ export default function Review(props){
             return data
         })
     }
-    function getReview(page,pagesize){//宿舍分配员专用
-        _axios({
-            method:'GET',
-            url:`/api/application/apply/status/center?pageNum=${page}&pageSize=${pagesize}`,
-        }).then(response=>{
-            const{code,result}=response.data
-            if(code===2000){
-                const {list}=result
-                if(list.length===0){
-                    setNoApps(true)
-                    PubSub.publish('cardsreturned',true)
-                    return 
-                }
-                let data=[]
-                for(let i=0;i<list.length;i++){
-                    let tmp={}
-                    tmp.key=uuidv4()
-
-                    tmp.id=list[i].id;
-                    tmp.userId=list[i].userId;
-                    tmp.paymentId=list[i].paymentId;
-
-                    if(list[i].type===0){
-                        tmp.type='入住';
-                    }else if(list[i].type===1){
-                        tmp.type='调宿'
-                    }else if(list[i].type===2){
-                        tmp.type='退宿'
-                    }
-                    
-                    tmp.fileUrl=list[i].fileUrl;
-                    tmp.applicationStatus=list[i].applicationStatus;
-
-                    if(list[i].depositStatus===0){
-                        tmp.depositStatus='未缴纳'
-                    }else if(list[i].depositStatus===1){
-                        tmp.depositStatus='已缴纳'
-                    }else if(list[i].depositStatus===2){
-                        tmp.depositStatus='已退回'
-                    }
-                    
-                    tmp.createTime=list[i].createTime;
-                    tmp.updateTime=list[i].updateTime;
-
-                    data.push(tmp)
-                }
-                setReviewData(data)
-                buildCards()
-                PubSub.publish('cardsreturned',true)
-            }else{
-                const{msg}=response.data
-                alert(msg)
+    function getReview(page,pagesize,str){//宿舍分配员专用
+        _axios.get(str,{
+            params:{
+                pageNum:page,
+                pageSize:pagesize
             }
-        })
-    }
-    function getOtherReview(page,pagesize){
-        _axios({
-            method:'GET',
-            url:`/api/application/apply/status/center/checkin?pageNum=${page}&pageSize=${pagesize}`
         }).then(response=>{
             const{code,result}=response.data
             if(code===2000){
@@ -208,62 +159,7 @@ export default function Review(props){
                 PubSub.publish('cardsreturned',true)
             }else{
                 const{msg}=response.data
-                alert(msg)
-            }
-        })
-    }
-    function getOtherReview6(page,pagesize){
-        _axios({
-            method:'GET',
-            url:`/api/application/apply/status/department?pageNum=${page}&pageSize=${pagesize}`
-        }).then(response=>{
-            const{code,result}=response.data
-            if(code===2000){
-                const {list}=result
-                if(list.length===0){
-                    setNoApps(true)
-                    PubSub.publish('cardsreturned',true)
-                    return 
-                }
-                let data=[]
-                for(let i=0;i<list.length;i++){
-                    let tmp={}
-                    tmp.key=uuidv4()
-
-                    tmp.id=list[i].id;
-                    tmp.userId=list[i].userId;
-                    tmp.paymentId=list[i].paymentId;
-
-                    if(list[i].type===0){
-                        tmp.type='入住';
-                    }else if(list[i].type===1){
-                        tmp.type='调宿'
-                    }else if(list[i].type===2){
-                        tmp.type='退宿'
-                    }
-                    
-                    tmp.fileUrl=list[i].fileUrl;
-                    tmp.applicationStatus=list[i].applicationStatus;
-
-                    if(list[i].depositStatus===0){
-                        tmp.depositStatus='未缴纳'
-                    }else if(list[i].depositStatus===1){
-                        tmp.depositStatus='已缴纳'
-                    }else if(list[i].depositStatus===2){
-                        tmp.depositStatus='已退回'
-                    }
-                    
-                    tmp.createTime=list[i].createTime;
-                    tmp.updateTime=list[i].updateTime;
-
-                    data.push(tmp)
-                }
-                setReviewData(data)
-                buildCards()
-                PubSub.publish('cardsreturned',true)
-            }else{
-                const{msg}=response.data
-                alert(msg)
+                messageApi.info(msg)
             }
         })
     }
@@ -283,12 +179,12 @@ export default function Review(props){
         }).then(response=>{
             const {code}=response.data
             if(code===2000){
-                alert('分配完成')
+                messageApi.info('分配完成')
                 setConfirmLoading(false)
                 getReview(1,100)
             }else{
                 const{msg}=response.data
-                alert(msg)
+                messageApi.info(msg)
                 setConfirmLoading(false)
             }
         })
@@ -310,10 +206,10 @@ export default function Review(props){
         setOpen(false);
     };
 
-    function reviewTheApp(){
+    function reviewTheApp(str){
         _axios({
             method:'POST',
-            url:'/api/application/apply/status/center/checkin',
+            url:str,
             data:{
                 id:reviewdata[index].id,
                 pass:canpass
@@ -321,47 +217,32 @@ export default function Review(props){
         }).then(response=>{
             const {code}=response.data
             if(code===2000){
-                alert('审批完成')
+                messageApi.info('审批完成')
                 getOtherReview(1,100)
             }else{
                 const{msg}=response.data
-                alert(msg)
-            }
-        })
-    }
-    function reviewTheApp6(){
-        _axios({
-            method:'POST',
-            url:'/api/application/apply/status/department',
-            data:{
-                id:reviewdata[index].id,
-                pass:canpass
-            }
-        }).then(response=>{
-            const {code}=response.data
-            if(code===2000){
-                alert('审批完成')
-                getOtherReview6(1,100)
-            }else{
-                const{msg}=response.data
-                alert(msg)
+                messageApi.info(msg)
             }
         })
     }
     function agree(){
         changePass(true)
         if(lognum===2){
-            reviewTheApp()
+            reviewTheApp('/api/application/apply/status/center/checkin')
         }else if(lognum===6){
-            reviewTheApp6()
+            reviewTheApp('/api/application/apply/status/department')
+        }else if(lognum===5){
+            reviewTheApp('/api/application/apply/status/apartment')
         }
     }
     function reject(){
         changePass(false)
         if(lognum===2){
-            reviewTheApp()
+            reviewTheApp('/api/application/apply/status/center/checkin')
         }else if(lognum===6){
-            reviewTheApp6()
+            reviewTheApp('/api/application/apply/status/department')
+        }else if(lognum===5){
+            reviewTheApp('/api/application/apply/status/apartment')
         }
     }
 
@@ -383,6 +264,7 @@ export default function Review(props){
     }else if(noApps===true){
         return (
             <div>
+                {contextHolder}
                 <Divider orientation="middle">申请页面</Divider>
                 <p>暂时没有新的申请，休息一下吧</p>
                 <Button onClick={flushf5} >刷新</Button>
@@ -391,6 +273,7 @@ export default function Review(props){
     }else if(lognum===3){
         return (
             <div>
+                {contextHolder}
                 <Divider orientation="middle">申请页面</Divider>
                 <Row gutter={[16, 20]}>
                     {carditems}
@@ -464,6 +347,7 @@ export default function Review(props){
     }else if(lognum===2){
         return (
             <div>
+                {contextHolder}
                 <Divider orientation="middle">申请页面</Divider>
                 <Row gutter={[16, 20]}>
                     {carditems}
@@ -522,9 +406,10 @@ export default function Review(props){
                 </Drawer>
             </div>
         )
-    }else if(lognum===6){
+    }else if(lognum===6||lognum==5){
         return (
             <div>
+                {contextHolder}
                 <Divider orientation="middle">申请页面</Divider>
                 <Row gutter={[16, 20]}>
                     {carditems}
